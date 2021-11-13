@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "API", "API_FrameWork\API_FrameWork.vcxproj", "{541E69B3-1299-4A77-B3D8-1E761F20C3D1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Headers", "Headers", "{9AE01643-4CB8-4CCE-A08A-C6B002BF37D9}"
+	ProjectSection(SolutionItems) = preProject
+		Headers\Include.h = Headers\Include.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Include", "Include", "{F2DB64F9-899A-4B0D-8CE1-5C41B5095C84}"
+	ProjectSection(SolutionItems) = preProject
+		Headers\AbstractFactory.h = Headers\AbstractFactory.h
+		Headers\Define.h = Headers\Define.h
+		Headers\Enum.h = Headers\Enum.h
+		Headers\Extern.h = Headers\Extern.h
+		Headers\Function.h = Headers\Function.h
+		Headers\Functor.h = Headers\Functor.h
+		Headers\Struct.h = Headers\Struct.h
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Debug|x64.ActiveCfg = Debug|x64
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Debug|x64.Build.0 = Debug|x64
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Debug|x86.ActiveCfg = Debug|Win32
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Debug|x86.Build.0 = Debug|Win32
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Release|x64.ActiveCfg = Release|x64
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Release|x64.Build.0 = Release|x64
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Release|x86.ActiveCfg = Release|Win32
+		{541E69B3-1299-4A77-B3D8-1E761F20C3D1}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F2DB64F9-899A-4B0D-8CE1-5C41B5095C84} = {9AE01643-4CB8-4CCE-A08A-C6B002BF37D9}
+	EndGlobalSection
+EndGlobal
