@@ -155,7 +155,7 @@
     <ClInclude Include="CollisionMgr.h" />
     <ClInclude Include="Effect.h" />
     <ClInclude Include="FireAttack.h" />
-    <ClInclude Include="Gold.h" />
+    <ClInclude Include="Potion.h" />
     <ClInclude Include="IceAttack.h" />
     <ClInclude Include="KeyMgr.h" />
     <ClInclude Include="Logo.h" />
@@ -191,7 +191,7 @@
     <ClCompile Include="CollisionMgr.cpp" />
     <ClCompile Include="Effect.cpp" />
     <ClCompile Include="FireAttack.cpp" />
-    <ClCompile Include="Gold.cpp" />
+    <ClCompile Include="Potion.cpp" />
     <ClCompile Include="IceAttack.cpp" />
     <ClCompile Include="KeyMgr.cpp" />
     <ClCompile Include="Logo.cpp" />

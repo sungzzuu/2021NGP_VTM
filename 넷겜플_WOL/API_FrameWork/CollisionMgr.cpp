@@ -90,8 +90,8 @@ void CCollisionMgr::Collision_Gold(list<CObj*>& _Dst, list<CObj*>& _Src)
 		{
 			if (IntersectRect(&rc, &Dst->Get_Rect(), &Src->Get_Rect()))
 			{
-				++m_iGold_Idx;
-				Dst->Set_Gold(15);
+				//++m_iGold_Idx;
+				Dst->Set_Hp(15);
 				Src->Set_Dead();
 			}
 		}

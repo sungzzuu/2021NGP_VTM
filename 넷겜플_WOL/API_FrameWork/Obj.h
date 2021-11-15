@@ -35,6 +35,7 @@ public:
 	void Set_Mana(int mana) { m_iMana += mana; }
 	void Set_Gold(int gold) { m_iGold += gold; }
 	void Set_MaxHp() { m_iHp = m_iMaxHp; }
+	void Set_Hp(int hp);
 
 	void Set_Ultimate(bool ult) { m_bUltimate = ult; }
 public:

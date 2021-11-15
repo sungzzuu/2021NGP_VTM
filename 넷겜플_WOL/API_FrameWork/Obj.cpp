@@ -19,6 +19,12 @@ CObj::~CObj()
 {
 }
 
+void CObj::Set_Hp(int hp)
+{
+	if (m_iMaxHp >= m_iHp + hp) 
+		m_iHp += hp;
+}
+
 void CObj::Update_Rect()
 {
 	m_tRect.left = (LONG)(m_tInfo.fX - (m_tInfo.iCX >> 1));

@@ -21,6 +21,7 @@ public:
 public:
 	void Stage_Number();
 	void Draw_Card(HDC _DC);
+	void Add_Potion();
 private:
 	CObj*	m_pPlayer;
 	CObj*	m_pMonster;
@@ -52,6 +53,7 @@ private:
 	bool    m_bStage_Boss;
 	CObj*	m_pBoss;
 
+	long long	m_lStartTime;
 };
 
 

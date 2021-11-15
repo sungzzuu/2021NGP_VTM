@@ -42,7 +42,7 @@ void CObjMgr::Update()
 	//	CCollisionMgr::Collision_Prison(m_listObj[OBJID::PLAYER], m_listObj[OBJID::PRISON]); //플레이어 감옥충돌
 
 	//if (!m_listObj[OBJID::GOLD].empty())
-	//	CCollisionMgr::Collision_Gold(m_listObj[OBJID::PLAYER], m_listObj[OBJID::GOLD]); //플레이어 돈충돌
+	CCollisionMgr::Collision_Gold(m_listObj[OBJID::PLAYER], m_listObj[OBJID::GOLD]); //플레이어 돈충돌
 
 	//if (!m_listObj[OBJID::SHOP].empty())
 	//	CCollisionMgr::Collision_Prison(m_listObj[OBJID::PLAYER], m_listObj[OBJID::SHOP]); //플레이어 상점충돌

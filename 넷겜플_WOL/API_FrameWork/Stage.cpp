@@ -11,6 +11,7 @@
 #include "TileMgr.h"
 #include "Shop.h"
 #include "KeyMgr.h"
+#include "Potion.h"
 
 CStage::CStage()
 	:m_pPlayer(nullptr), m_pMonster(nullptr), m_bStage1_1(false), m_bStage1_2(false), m_bStage1_3(false)
@@ -21,6 +22,8 @@ CStage::CStage()
 	, m_bStage5_1(false)
 	, m_bStage_Boss(false), m_pBoss(nullptr)
 {
+	m_lStartTime = GetTickCount64();
+
 }
 
 
@@ -59,6 +62,8 @@ void CStage::Update()
 {
 	CObjMgr::Get_Instance()->Update();
 
+	
+	Add_Potion();
 	Stage_Number();
 }
 
@@ -119,5 +124,21 @@ void CStage::Draw_Card(HDC _DC)
 			0, 0,
 			128, 192,
 			RGB(255, 0, 255));
+	}
+}
+
+void CStage::Add_Potion()
+{
+	// 랜덤하게 체력약 생성
+	if (GetTickCount64() - m_lStartTime > 10000)
+	{
+		m_lStartTime = GetTickCount64();
+
+		int iX = (rand() % 1000) + 50;
+		int iY = (rand() % 500) + 50;
+
+		CObj* pObj1 = CAbstractFactory<CPotion>::Create();
+		pObj1->Set_Pos(iX, iY);
+		CObjMgr::Get_Instance()->Add_Object(OBJID::GOLD, pObj1);
 	}
 }
