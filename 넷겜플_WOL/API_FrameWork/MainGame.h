@@ -17,6 +17,13 @@ public:
 	void Render();
 	void Release();
 
+
+public:
+	// 서버 관련 함수
+	void err_display(char* msg);
+	void err_quit(char* msg);
+	int recvn(SOCKET s, char* buf, int len, int flags);
+
 private:
 	HDC		m_DC;
 

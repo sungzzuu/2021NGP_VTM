@@ -17,6 +17,11 @@
 #include <memory.h>
 #include <tchar.h>
 
+// 서버
+#define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
+#pragma comment(lib, "ws2_32")
+#include <winsock2.h>
+
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 
