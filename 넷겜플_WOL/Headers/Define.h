@@ -28,4 +28,6 @@
 
 #define PLAYER_ATTACK 10
 
+#define SERVERPORT 9000
+
 #endif // !__DEFINE_H__
