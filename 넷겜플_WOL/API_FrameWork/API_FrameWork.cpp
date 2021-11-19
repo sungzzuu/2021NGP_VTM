@@ -18,7 +18,16 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+// 서버 관련 함수
+void err_display(char* msg);
+void err_quit(char* msg);
+int recvn(SOCKET s, char* buf, int len, int flags);
+DWORD WINAPI ServerProcess(LPVOID arg);
+
+// 서버 관련 변수
+HANDLE hServerProcess;
+char SERVERIP[512] = "127.0.0.1";
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -46,8 +55,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
 	msg.message = WM_NULL;
 
-	CMainGame		mainGame;
+	CMainGame mainGame;
 	mainGame.Initialize();
+
+	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
+	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
 	DWORD	dwTime1 = GetTickCount();
 
@@ -63,6 +75,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			mainGame.Update();
 			mainGame.Late_Update();
+
+			// 서버 통신 진행
+
 			mainGame.Render();
 
 			dwTime1 = GetTickCount();
@@ -166,4 +181,104 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
+}
+
+void err_display(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	printf("[%s] %s", msg, (char*)lpMsgBuf);
+	LocalFree(lpMsgBuf);
+}
+
+
+void err_quit(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+int recvn(SOCKET s, char* buf, int len, int flags)
+{
+	int received;
+	char* ptr = buf;
+	int left = len;
+
+	while (left > 0) {
+		received = recv(s, ptr, left, flags);
+		if (received == SOCKET_ERROR)
+			return SOCKET_ERROR;
+		else if (received == 0)
+			break;
+		left -= received;
+		ptr += received;
+	}
+
+	return (len - left);
+}
+
+DWORD WINAPI ServerProcess(LPVOID arg)
+{
+    int retval;
+
+    // 윈속 초기화
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+        return 1;
+
+    // socket()
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == INVALID_SOCKET)
+        err_quit("socket()");
+
+    // connet()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_port = htons(SERVERPORT);
+    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR)
+        err_quit("connect()");
+
+    char str[] = "클라에서 왔다.";
+    int len = strlen(str);
+
+    // 데이터 보내기 -> 고정 길이 - 파일 크기 -> 버퍼사이즈
+    retval = send(sock, (char*)&len, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR) {
+        err_display("send()");
+        return 0;
+    }
+
+    retval = send(sock, str, strlen(str) + 1, 0);
+    if (retval == SOCKET_ERROR) {
+        err_display("send()");
+        return 0;
+    }
+
+    //// 데이터 받기
+    //retval = recvn(sock, (char*)&len, sizeof(int), 0);
+    //if (retval == SOCKET_ERROR) {
+    //    err_display("recv()");
+    //    break;
+    //}
+    //else if (retval == 0)
+    //    break;
+    // closesocket()
+    closesocket(sock);
+
+    // 윈속 종료
+    WSACleanup();
 }
