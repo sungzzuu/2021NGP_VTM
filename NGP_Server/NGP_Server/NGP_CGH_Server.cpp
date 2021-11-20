@@ -10,8 +10,11 @@ struct Point
 {
     float x = 0.f, y = 0.f;
 };
+
 HANDLE g_hClientEvent[4];
+int g_iWaitClientIndex[4];
 int g_iClientCount = 0; //접속한 클라 갯수
+
 Point g_tPosition[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
@@ -59,7 +62,6 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 }
 
 //////////////
-void WaitForClientEvent(int iCurIndex);
 
 
 int main(int argc, char* argv[])
@@ -95,12 +97,13 @@ int main(int argc, char* argv[])
     HANDLE hThread;
 
 
-    //이벤트 그냥 미리 생성, 
-    g_hClientEvent[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
-    g_hClientEvent[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
-    g_hClientEvent[2] = CreateEvent(NULL, FALSE, FALSE, NULL);
-    g_hClientEvent[3] = CreateEvent(NULL, FALSE, TRUE, NULL);
-
+    //이벤트 생성
+    //클라4개 접속중일때 0이 3번, 1이 0번, 2가 1번, 3이 2번, 이벤트 기다림
+    for (int i = 0; i < 4; ++i)
+    {
+        g_hClientEvent[i] = CreateEvent(NULL, FALSE, (i < 3 ? FALSE : TRUE), NULL);
+        g_iWaitClientIndex[i] = (i == 0) ? 3 : i - 1; // 3 0 1 2
+    }
 
 
     MyThread tThread;
@@ -118,6 +121,7 @@ int main(int argc, char* argv[])
 
         tThread.sock = client_sock;
         ++g_iClientCount;
+        ++tThread.iIndex;
 
         // 접속한 클라이언트 정보 출력
         printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",
@@ -146,7 +150,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 {
     MyThread* pThread = (MyThread*)arg;
     SOCKET client_sock = (SOCKET)pThread->sock;
-    int iCurIndex = pThread->iIndex - 1; //배열 인덱스로 사용해서 -1
+    int iCurIndex = pThread->iIndex - 1; //현재 쓰레드 인덱스, 배열 인덱스로 사용해서 -1
 
     int retval;
     SOCKADDR_IN clientaddr;
@@ -160,7 +164,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     while (1)
     {
         if (g_iClientCount >= 2)
-            WaitForClientEvent(iCurIndex);
+            WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
         // 데이터 받기
@@ -185,9 +189,25 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             err_display("send()");
             break;
         }
+
+        SetEvent(g_hClientEvent[iCurIndex]);
     }
 
-    --g_iClientCount;
+
+    if (--g_iClientCount >= 2)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            //자신을 참조하던 클라를 찾음
+            if (g_iWaitClientIndex[i] == iCurIndex)
+            {
+                g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //자신이 참조하고있던 인덱스로 바꿔줌
+                g_iWaitClientIndex[iCurIndex] = -1;
+                break;
+            }
+        }
+    }
+
 
     CloseHandle(g_hClientEvent[iCurIndex]);
 
@@ -199,23 +219,3 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     return 0;
 }
 
-void WaitForClientEvent(int iCurIndex)
-{
-    if (iCurIndex == 0 && g_hClientEvent[3])
-        WaitForSingleObject(g_hClientEvent[3], INFINITE);
-
-    else if (iCurIndex == 1 && g_hClientEvent[0])
-        WaitForSingleObject(g_hClientEvent[0], INFINITE);
-
-    else if (iCurIndex == 2 && g_hClientEvent[1])
-        WaitForSingleObject(g_hClientEvent[1], INFINITE);
-
-    else if (iCurIndex == 3 && g_hClientEvent[2])
-        WaitForSingleObject(g_hClientEvent[2], INFINITE);
-
-    //for (int i = 0; i < g_iClientCount; ++i)
-    //{
-    //    if (iCurIndex == i && g_hClientEvent[1])
-    //        WaitForSingleObject(g_hClientEvent[1], INFINITE);
-    //}
-}
