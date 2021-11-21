@@ -24,10 +24,14 @@ void err_display(char* msg);
 void err_quit(char* msg);
 int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
+bool RecvHpPotionInfo(SOCKET sock);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
 char SERVERIP[512] = "127.0.0.1";
+
+// 체력약 관련 변수
+POTIONRES g_tHpPotionInfo;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -59,7 +63,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainGame.Initialize();
 
 	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
-	//hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
 	DWORD	dwTime1 = GetTickCount();
 
@@ -258,27 +262,10 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     int len = strlen(str);
     while (true)
     {
-        // 데이터 보내기 -> 고정 길이 - 파일 크기 -> 버퍼사이즈
-        retval = send(sock, (char*)&len, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-        if (retval == SOCKET_ERROR) {
-            err_display("send()");
-            return 0;
-        }
+        // 이곳에 각각의 함수 추가! 주고 받는 것
+        retval = RecvHpPotionInfo(sock);
 
-        retval = send(sock, str, strlen(str) + 1, 0);
-        if (retval == SOCKET_ERROR) {
-            err_display("send()");
-            return 0;
-        }
-
-        // 데이터 받기
-        retval = recvn(sock, buf, BUFSIZ, 0);
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("recv()");
-            break;
-        }
-        else if (retval == 0)
+        if (retval == FALSE)
             break;
     }
 
@@ -296,4 +283,36 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 
     // 윈속 종료
     WSACleanup();
+}
+
+bool RecvHpPotionInfo(SOCKET sock)
+{
+    int retval;
+
+    // 체력약 정보받기 계속 정보를 받긴하지만, 생성되었을때, 아닐때가 다름
+    HpPotionInfo tHpPotionInfo;
+    retval = recvn(sock, (char*)&tHpPotionInfo, sizeof(HpPotionInfo), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    if (tHpPotionInfo.bCreateOn)
+    {
+        printf("체력약 생성\n");
+    }
+    // 체력약 충돌 정보 보내기
+    
+    retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(POTIONRES), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR) {
+        err_display("send()");
+        return 0;
+    }
+
+    return TRUE;
+
+    
 }

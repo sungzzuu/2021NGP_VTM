@@ -10,6 +10,6 @@
 #include <fstream>
 #include "Define.h"
 #include "Struct.h"
-
+#include "Timer.h"
 
 #endif //PCH_H

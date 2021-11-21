@@ -63,7 +63,7 @@ void CStage::Update()
 	CObjMgr::Get_Instance()->Update();
 
 	
-	Add_Potion();
+	//Add_Potion();
 	Stage_Number();
 }
 

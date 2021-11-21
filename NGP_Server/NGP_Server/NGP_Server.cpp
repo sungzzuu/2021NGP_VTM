@@ -1,6 +1,33 @@
 ﻿#include "pch.h"
 
+
+struct MyThread
+{
+    int iIndex = 0;
+    SOCKET sock = 0;
+};
+
+HANDLE g_hClientEvent[4];
+int g_iWaitClientIndex[4];
+int g_iClientCount = 0; //접속한 클라 갯수
+
+POINT g_tPosition[4];
+CGameTimer m_GameTimer;
+
+// 체력약 관련
+HpPotionInfo g_tHpPotionInfo;
+float fPotionCreateTime = 0.f;
+
+
 DWORD WINAPI ProcessClient(LPVOID arg);
+DWORD WINAPI ServerMain(LPVOID arg);
+
+// 체력약 관련
+void CreateHpPotion();
+bool SendRecv_HpPotionInfo(SOCKET sock);
+
+CRITICAL_SECTION cs;
+
 void err_quit(char* msg)
 {
     LPVOID lpMsgBuf;
@@ -30,7 +57,8 @@ int recvn(SOCKET s, char* buf, int len, int flags)
     char* ptr = buf;
     int left = len;
 
-    while (left > 0) {
+    while (left > 0)
+    {
         received = recv(s, ptr, left, flags);
         if (received == SOCKET_ERROR)
             return SOCKET_ERROR;
@@ -43,9 +71,17 @@ int recvn(SOCKET s, char* buf, int len, int flags)
     return (len - left);
 }
 
+//////////////
+
 
 int main(int argc, char* argv[])
 {
+
+    srand(unsigned int(time(NULL)));
+
+    // ServerMain 스레드
+    CreateThread(NULL, 0, ServerMain, 0, 0, NULL);
+
     int retval;
 
     // 윈속 초기화
@@ -76,22 +112,39 @@ int main(int argc, char* argv[])
     int addrlen;
     HANDLE hThread;
 
-    while (1) {
+
+    //이벤트 생성
+    //클라4개 접속중일때 0이 3번, 1이 0번, 2가 1번, 3이 2번, 이벤트 기다림
+    for (int i = 0; i < 4; ++i)
+    {
+        g_hClientEvent[i] = CreateEvent(NULL, FALSE, (i < 3 ? FALSE : TRUE), NULL);
+        g_iWaitClientIndex[i] = (i == 0) ? 3 : i - 1; // 3 0 1 2
+    }
+
+
+    MyThread tThread;
+    tThread.iIndex = 0;
+    while (1)
+    {
         // accept()
         addrlen = sizeof(clientaddr);
         client_sock = accept(listen_sock, (SOCKADDR*)&clientaddr, &addrlen);
-        if (client_sock == INVALID_SOCKET) {
+        if (client_sock == INVALID_SOCKET)
+        {
             err_display("accept()");
             break;
         }
+
+        tThread.sock = client_sock;
+        ++g_iClientCount;
+        ++tThread.iIndex;
 
         // 접속한 클라이언트 정보 출력
         printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",
             inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
         // 스레드 생성
-        hThread = CreateThread(NULL, 0, ProcessClient,
-            (LPVOID)client_sock, 0, NULL);
+        hThread = CreateThread(NULL, 0, ProcessClient, &tThread, 0, NULL);
 
         if (hThread == NULL) { closesocket(client_sock); }
         else { CloseHandle(hThread); }
@@ -111,7 +164,10 @@ int main(int argc, char* argv[])
 // 클라이언트와 데이터 통신
 DWORD WINAPI ProcessClient(LPVOID arg)
 {
-    SOCKET client_sock = (SOCKET)arg;
+    MyThread* pThread = (MyThread*)arg;
+    SOCKET client_sock = (SOCKET)pThread->sock;
+    int iCurIndex = pThread->iIndex - 1; //현재 쓰레드 인덱스, 배열 인덱스로 사용해서 -1
+
     int retval;
     SOCKADDR_IN clientaddr;
     int addrlen;
@@ -121,38 +177,39 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     addrlen = sizeof(clientaddr);
     getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
 
-    int len;
-    char str[BUFSIZE];
+    while (1)
+    {
+        if (g_iClientCount >= 2)
+            WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
-    while (1) {
-        // 데이터 받기
-        retval = recvn(client_sock, (char*)&len, sizeof(int), 0);
-        if (retval == SOCKET_ERROR) {
-            err_display("recv()");
+
+        // 이스레드가 끝났다면 FALSE 리턴하므로
+        if (!SendRecv_HpPotionInfo(client_sock))
+        {
+            SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
-        else if (retval == 0)
-            break;
 
-        retval = recvn(client_sock, str, len, 0);
-        if (retval == SOCKET_ERROR) {
-            err_display("recv()");
-            break;        }
-        else if (retval == 0)
-            break;
-
-        // 받은 데이터 출력
-        buf[retval] = '\0';
-        printf("[TCP/%s:%d] %s\n", inet_ntoa(clientaddr.sin_addr),
-            ntohs(clientaddr.sin_port), str);
-
-        //// 데이터 보내기
-        //retval = send(client_sock, buf, retval, 0);
-        //if (retval == SOCKET_ERROR) {
-        //    err_display("send()");
-        //    break;
-        //}
+        SetEvent(g_hClientEvent[iCurIndex]);
     }
+
+
+    if (--g_iClientCount >= 2)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            //자신을 참조하던 클라를 찾음
+            if (g_iWaitClientIndex[i] == iCurIndex)
+            {
+                g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //자신이 참조하고있던 인덱스로 바꿔줌
+                g_iWaitClientIndex[iCurIndex] = -1;
+                break;
+            }
+        }
+    }
+
+
+    CloseHandle(g_hClientEvent[iCurIndex]);
 
     // closesocket()
     closesocket(client_sock);
@@ -160,4 +217,82 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
     return 0;
+}
+
+// 서버 프로세스 구현
+DWORD WINAPI ServerMain(LPVOID arg)
+{
+    m_GameTimer.Reset();
+
+    while (true)
+    {
+        // 1. 체력약 시간재서 보내기
+        m_GameTimer.Tick(60.0f);
+        CreateHpPotion();
+
+        
+    }
+}
+
+void CreateHpPotion()
+{
+    fPotionCreateTime += m_GameTimer.GetTimeElapsed();
+
+    if (fPotionCreateTime >= POTION_TIME)
+    {
+        fPotionCreateTime = 0.f;
+        //g_tHpPotionInfo.cnt = 0;
+        g_tHpPotionInfo.bCreateOn = true;
+        g_tHpPotionInfo.index = 0;
+        g_tHpPotionInfo.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
+        g_tHpPotionInfo.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
+        printf("포션생성\n");
+
+    }
+}
+
+bool SendRecv_HpPotionInfo(SOCKET sock)
+{
+    int retval;
+
+    // 동기화 오류
+    // 여기서 g_tHpPotionInfo는 공유자원
+    // 서로 다른 스레드에서 동시에 접근하므로 객체가 변함
+    // Main스레드도 동기화를 해야함
+  
+
+    // 체력약 생성 정보 보내기
+    retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(HpPotionInfo), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+    if (g_tHpPotionInfo.bCreateOn)
+    {
+        g_tHpPotionInfo.cnt++;
+
+        // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
+        if (g_tHpPotionInfo.cnt == g_iClientCount)
+        {
+            ZeroMemory(&g_tHpPotionInfo, sizeof(HpPotionInfo));
+        }
+    }
+
+
+
+    // 체력약 충돌 정보 받기
+    POTIONRES tHpPotionRes;
+
+    retval = recvn(sock, (char*)&tHpPotionRes, sizeof(POTIONRES), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    // 충돌일 경우 처리 - 맵에서 삭제 및 다른 클라에 알리기
+
 }

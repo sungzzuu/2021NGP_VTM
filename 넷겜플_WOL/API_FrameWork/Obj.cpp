@@ -21,8 +21,10 @@ CObj::~CObj()
 
 void CObj::Set_Hp(int hp)
 {
-	if (m_iMaxHp >= m_iHp + hp) 
+	if (m_iMaxHp >= m_iHp + hp)
 		m_iHp += hp;
+	else
+		m_iHp = m_iMaxHp;
 }
 
 void CObj::Update_Rect()
