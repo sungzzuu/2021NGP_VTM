@@ -137,8 +137,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         retval = recvn(client_sock, str, len, 0);
         if (retval == SOCKET_ERROR) {
             err_display("recv()");
-            break;
-        }
+            break;        }
         else if (retval == 0)
             break;
 

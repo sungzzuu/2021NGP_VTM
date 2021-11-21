@@ -139,6 +139,16 @@ void CPlayer::Late_Update()
 	m_tPoRight.x = (LONG)(m_tInfo.fX + cosf((m_fAngle - 25) * PI / 180.f) * m_fPoSize);
 	m_tPoRight.y = (LONG)(m_tInfo.fY - sinf((m_fAngle - 25) * PI / 180.f) * m_fPoSize);
 
+	// 맵 안에서만 움직이도록
+	if (m_tInfo.fX < MAP_EDGE)
+		m_tInfo.fX = MAP_EDGE;
+	if(m_tInfo.fX > WINCX - MAP_EDGE)
+		m_tInfo.fX = WINCX - MAP_EDGE;
+	if (m_tInfo.fY < MAP_EDGE)
+		m_tInfo.fY = MAP_EDGE;
+	if (m_tInfo.fY > WINCY - MAP_EDGE*1.5f)
+		m_tInfo.fY = WINCY - MAP_EDGE*1.5f;
+
 }
 
 void CPlayer::Render(HDC _DC)

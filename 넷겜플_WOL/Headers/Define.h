@@ -30,4 +30,6 @@
 
 #define SERVERPORT 9000
 
+#define MAP_EDGE 50
+
 #endif // !__DEFINE_H__

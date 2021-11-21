@@ -59,7 +59,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainGame.Initialize();
 
 	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
-	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+	//hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
 	DWORD	dwTime1 = GetTickCount();
 
@@ -253,20 +253,35 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         err_quit("connect()");
 
     char str[] = "클라에서 왔다.";
+    char buf[BUFSIZ + 1];
+
     int len = strlen(str);
+    while (true)
+    {
+        // 데이터 보내기 -> 고정 길이 - 파일 크기 -> 버퍼사이즈
+        retval = send(sock, (char*)&len, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+        if (retval == SOCKET_ERROR) {
+            err_display("send()");
+            return 0;
+        }
 
-    // 데이터 보내기 -> 고정 길이 - 파일 크기 -> 버퍼사이즈
-    retval = send(sock, (char*)&len, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-    if (retval == SOCKET_ERROR) {
-        err_display("send()");
-        return 0;
+        retval = send(sock, str, strlen(str) + 1, 0);
+        if (retval == SOCKET_ERROR) {
+            err_display("send()");
+            return 0;
+        }
+
+        // 데이터 받기
+        retval = recvn(sock, buf, BUFSIZ, 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            break;
+        }
+        else if (retval == 0)
+            break;
     }
 
-    retval = send(sock, str, strlen(str) + 1, 0);
-    if (retval == SOCKET_ERROR) {
-        err_display("send()");
-        return 0;
-    }
 
     //// 데이터 받기
     //retval = recvn(sock, (char*)&len, sizeof(int), 0);
