@@ -34,8 +34,8 @@ char SERVERIP[512] = "127.0.0.1";
 
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionInfo;
-void Add_Potion(POINT pt);
-
+void Add_Potion(HpPotionCreate);
+void Delete_Potion(HpPotionDelete hpPotionDelete);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -287,7 +287,7 @@ bool RecvHpPotionInfo(SOCKET sock)
 {
     int retval;
 
-    // 체력약 정보받기 계속 정보를 받긴하지만, 생성되었을때, 아닐때가 다름
+    // 체력약 정보받기 생성&삭제
     HpPotionInfo tHpPotionInfo;
     retval = recvn(sock, (char*)&tHpPotionInfo, sizeof(HpPotionInfo), 0);
     if (retval == SOCKET_ERROR)
@@ -297,29 +297,45 @@ bool RecvHpPotionInfo(SOCKET sock)
     }
     else if (retval == 0)
         return FALSE;
-
-    if (tHpPotionInfo.bCreateOn)
+    
+    // 체력약 생성
+    if (tHpPotionInfo.thpPotionCreate.bCreateOn)
     {
-        // 체력약 생성
-        Add_Potion(tHpPotionInfo.pos);
+        Add_Potion(tHpPotionInfo.thpPotionCreate);
         printf("체력약 생성\n");
     }
+
+    // 체력약 삭제
+    if (tHpPotionInfo.thpPotionDelete.bDeleteOn)
+    {
+        Delete_Potion(tHpPotionInfo.thpPotionDelete);
+        printf("체력약 삭제됨(다른 클라에 의해)\n");
+    }
+
     // 체력약 충돌 정보 보내기
-    
     retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(POTIONRES), 0); // 길이가 고정된 값이 아닌 가변인자인 len
     if (retval == SOCKET_ERROR) {
         err_display("send()");
         return 0;
     }
 
+    ZeroMemory(&g_tHpPotionInfo, sizeof(POTIONRES));
+
     return TRUE;
 
     
 }
 
-void Add_Potion(POINT pt)
+void Add_Potion(HpPotionCreate hpPotionCreate)
 {
     CObj* pObj1 = CAbstractFactory<CPotion>::Create();
-    pObj1->Set_Pos(pt.x, pt.y);
+    pObj1->Set_Pos(hpPotionCreate.pos.x, hpPotionCreate.pos.y);
+    dynamic_cast<CPotion*>(pObj1)->SetIndex(hpPotionCreate.index);
     CObjMgr::Get_Instance()->Add_Object(OBJID::GOLD, pObj1);
+}
+
+void Delete_Potion(HpPotionDelete hpPotionDelete)
+{
+    // index 일치하는 체력약 찾아서 삭제하기
+    CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
 }

@@ -39,20 +39,33 @@ typedef struct tagFrame
 }FRAME;
 
 
-
-
-///////////////////////////////////////////////// 서버에도 있는 구조체
-struct HpPotionInfo
+//////////////////////////////////// 서버
+struct HpPotionCreate
 {
 	int		cnt; // 몇개의 클라에 보냈는지
 	int		index; // 체력약 리스트 중 몇번째?
 	bool	bCreateOn;
 	POINT	pos;
 };
+
+struct HpPotionDelete
+{
+	int		cnt; // 몇개의 클라에 보냈는지
+	int		index; // 체력약 리스트 중 몇번째?
+	bool	bDeleteOn;
+};
+
+struct HpPotionInfo
+{
+	HpPotionCreate thpPotionCreate;
+	HpPotionDelete thpPotionDelete;
+};
+
+
+//struct HpPotion
 typedef struct tagHpPotionRes
 {
 	bool	bCollision;
 	int		iIndex;
 }POTIONRES;
-
 #endif // !__STRUCT_H__

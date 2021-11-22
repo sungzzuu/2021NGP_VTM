@@ -14,11 +14,11 @@ public:
 	virtual void Release() override;
 
 public:
-	int GetIndex() { return m_iIndex; }
-	void SetIndex(int iIndex) { m_iIndex = iIndex; }
+	int GetIndex() { return m_lIndex; }
+	void SetIndex(LONG lIndex) { m_lIndex = lIndex; }
 	void CallBackCollision();
 private:
-	int m_iIndex;
+	LONG m_lIndex;
 
 };
 

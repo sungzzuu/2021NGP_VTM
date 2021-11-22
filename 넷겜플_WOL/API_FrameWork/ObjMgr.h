@@ -26,6 +26,11 @@ public:
 	CObj* Get_Target(CObj* _pDst, OBJID::ID _eID);
 	bool Get_AllDead(OBJID::ID _eID);
 
+
+	// 체력약 관련 함수
+public:
+	void Delete_Potion(LONG index);
+
 	// 싱글톤 패턴
 public:
 	static CObjMgr* Get_Instance()
