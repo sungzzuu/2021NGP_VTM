@@ -272,6 +272,8 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
     if (retval == SOCKET_ERROR)
     {
         err_display("send()");
+        LeaveCriticalSection(&g_csHpPotion);
+
         return FALSE;
     }
     if (g_tHpPotionInfo.bCreateOn)

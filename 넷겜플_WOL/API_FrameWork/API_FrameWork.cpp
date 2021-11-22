@@ -5,6 +5,8 @@
 #include "API_FrameWork.h"
 
 #include "MainGame.h"
+#include "Potion.h"
+#include "ObjMgr.h"
 
 #define MAX_LOADSTRING 100
 
@@ -30,8 +32,10 @@ bool RecvHpPotionInfo(SOCKET sock);
 HANDLE hServerProcess;
 char SERVERIP[512] = "127.0.0.1";
 
-// 체력약 관련 변수
+// 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionInfo;
+void Add_Potion(POINT pt);
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -79,8 +83,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			mainGame.Update();
 			mainGame.Late_Update();
-
-			// 서버 통신 진행
 
 			mainGame.Render();
 
@@ -298,6 +300,8 @@ bool RecvHpPotionInfo(SOCKET sock)
 
     if (tHpPotionInfo.bCreateOn)
     {
+        // 체력약 생성
+        Add_Potion(tHpPotionInfo.pos);
         printf("체력약 생성\n");
     }
     // 체력약 충돌 정보 보내기
@@ -311,4 +315,11 @@ bool RecvHpPotionInfo(SOCKET sock)
     return TRUE;
 
     
+}
+
+void Add_Potion(POINT pt)
+{
+    CObj* pObj1 = CAbstractFactory<CPotion>::Create();
+    pObj1->Set_Pos(pt.x, pt.y);
+    CObjMgr::Get_Instance()->Add_Object(OBJID::GOLD, pObj1);
 }
