@@ -12,5 +12,6 @@
 #include "Struct.h"
 
 #include "Include.h"
+#include "Timer.h"
 
 #endif //PCH_H

@@ -55,3 +55,10 @@ void CPotion::Render(HDC _DC)
 void CPotion::Release()
 {
 }
+
+void CPotion::CallBackCollision()
+{
+	// 서버에 알린다.
+	g_tHpPotionInfo.iIndex = m_iIndex;
+	g_tHpPotionInfo.bCollision = true;
+}

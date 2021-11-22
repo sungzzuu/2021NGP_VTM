@@ -256,3 +256,5 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+NGP_Server/.vs/NGP_Server/v16
+넷겜플_WOL/.vs/API_FrameWork/v16

@@ -35,7 +35,7 @@ typedef struct tagFrame
 	int		iFrameEnd;
 	int		iFrameScene;
 	DWORD	dwFrameSpeed;
-	DWORD	dwFrameTime;
+	DWORD	dwFrameTime;        
 }FRAME;
 
 /// ///////////////////////////////////////////
@@ -50,5 +50,21 @@ typedef struct tagStoreData
 	INFO tPlayersPos[4] = {0};
 	int iClientIndex = 0;
 }STORE_DATA;
+
+
+
+///////////////////////////////////////////////// 서버에도 있는 구조체
+struct HpPotionInfo
+{
+	int		cnt; // 몇개의 클라에 보냈는지
+	int		index; // 체력약 리스트 중 몇번째?
+	bool	bCreateOn;
+	POINT	pos;
+};
+typedef struct tagHpPotionRes
+{
+	bool	bCollision;
+	int		iIndex;
+}POTIONRES;
 
 #endif // !__STRUCT_H__

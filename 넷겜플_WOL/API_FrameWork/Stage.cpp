@@ -56,6 +56,17 @@ void CStage::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Map/WOL_TILE_DUNGEON.bmp", L"WOL_TILE_DUNGEON");
 	CTileMgr::Get_Instance()->Load_Tile();
 
+	//m_pPlayer = CAbstractFactory<CPlayer>::Create();
+	//m_pPlayer->Set_Target(pObj1);
+	//CObjMgr::Get_Instance()->Add_Object(OBJID::PLAYER, m_pPlayer);
+
+	//m_pPlayer = CAbstractFactory<CPlayer>::Create();
+	//m_pPlayer->Set_Target(pObj1);
+	//CObjMgr::Get_Instance()->Add_Object(OBJID::PLAYER, m_pPlayer);
+
+	//m_pPlayer = CAbstractFactory<CPlayer>::Create();
+	//m_pPlayer->Set_Target(pObj1);
+	//CObjMgr::Get_Instance()->Add_Object(OBJID::PLAYER, m_pPlayer);
 }
 
 void CStage::Update()
@@ -63,7 +74,7 @@ void CStage::Update()
 	CObjMgr::Get_Instance()->Update();
 
 	
-	Add_Potion();
+	//Add_Potion();
 	Stage_Number();
 }
 

@@ -4,6 +4,7 @@
 #include "TileMgr.h"
 #include "Tile.h"
 #include "ScrollMgr.h"
+#include "Potion.h"
 
 int CCollisionMgr::m_iGold_Idx = 0;
 
@@ -92,7 +93,9 @@ void CCollisionMgr::Collision_Gold(list<CObj*>& _Dst, list<CObj*>& _Src)
 			{
 				//++m_iGold_Idx;
 				Dst->Set_Hp(15);
+				dynamic_cast<CPotion*>(Src)->CallBackCollision();
 				Src->Set_Dead();
+
 			}
 		}
 	}

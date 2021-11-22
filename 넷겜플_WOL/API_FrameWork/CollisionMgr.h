@@ -4,6 +4,7 @@
 #define __COLLISIONMGR_H__
 
 class CObj;
+
 class CCollisionMgr
 {
 public:
