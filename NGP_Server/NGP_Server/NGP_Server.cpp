@@ -26,7 +26,7 @@ DWORD WINAPI ServerMain(LPVOID arg);
 void CreateHpPotion();
 bool SendRecv_HpPotionInfo(SOCKET sock);
 
-CRITICAL_SECTION cs;
+CRITICAL_SECTION g_csHpPotion;
 
 void err_quit(char* msg)
 {
@@ -76,6 +76,7 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 
 int main(int argc, char* argv[])
 {
+    InitializeCriticalSection(&g_csHpPotion);
 
     srand(unsigned int(time(NULL)));
 
@@ -153,6 +154,8 @@ int main(int argc, char* argv[])
     // closesocket()
     closesocket(listen_sock);
 
+    DeleteCriticalSection(&g_csHpPotion);
+
     // 윈속 종료
     WSACleanup();
     return 0;
@@ -229,7 +232,6 @@ DWORD WINAPI ServerMain(LPVOID arg)
         // 1. 체력약 시간재서 보내기
         m_GameTimer.Tick(60.0f);
         CreateHpPotion();
-
         
     }
 }
@@ -240,13 +242,16 @@ void CreateHpPotion()
 
     if (fPotionCreateTime >= POTION_TIME)
     {
+        EnterCriticalSection(&g_csHpPotion);
+
         fPotionCreateTime = 0.f;
-        //g_tHpPotionInfo.cnt = 0;
+        g_tHpPotionInfo.cnt = 0;
         g_tHpPotionInfo.bCreateOn = true;
         g_tHpPotionInfo.index = 0;
         g_tHpPotionInfo.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
         g_tHpPotionInfo.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
         printf("포션생성\n");
+        LeaveCriticalSection(&g_csHpPotion);
 
     }
 }
@@ -260,6 +265,7 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
     // 서로 다른 스레드에서 동시에 접근하므로 객체가 변함
     // Main스레드도 동기화를 해야함
   
+    EnterCriticalSection(&g_csHpPotion);
 
     // 체력약 생성 정보 보내기
     retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(HpPotionInfo), 0);
@@ -279,6 +285,7 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
         }
     }
 
+    LeaveCriticalSection(&g_csHpPotion);
 
 
     // 체력약 충돌 정보 받기

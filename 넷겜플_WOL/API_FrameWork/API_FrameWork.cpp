@@ -256,10 +256,6 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     if (retval == SOCKET_ERROR)
         err_quit("connect()");
 
-    char str[] = "클라에서 왔다.";
-    char buf[BUFSIZ + 1];
-
-    int len = strlen(str);
     while (true)
     {
         // 이곳에 각각의 함수 추가! 주고 받는 것
