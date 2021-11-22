@@ -1,21 +1,17 @@
 #include "pch.h"
 
-
 struct MyThread
 {
     int iIndex = 0;
     SOCKET sock = 0;
-};
-struct Point
-{
-    float x = 0.f, y = 0.f;
 };
 
 HANDLE g_hClientEvent[4];
 int g_iWaitClientIndex[4];
 int g_iClientCount = 0; //접속한 클라 갯수
 
-Point g_tPosition[4];
+STORE_DATA g_tStoreData;
+bool isGameStart = false;
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 void err_quit(char* msg)
@@ -105,6 +101,8 @@ int main(int argc, char* argv[])
         g_iWaitClientIndex[i] = (i == 0) ? 3 : i - 1; // 3 0 1 2
     }
 
+    //구조체 초기화
+    memset(g_tStoreData.tPlayersPos, 0, sizeof(g_tStoreData.tPlayersPos));
 
     MyThread tThread;
     tThread.iIndex = 0;
@@ -163,12 +161,22 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
     while (1)
     {
+        if (!isGameStart)
+        {
+            if(g_iClientCount < 4)
+                continue;
+            else
+                isGameStart = true;
+        }
+
         if (g_iClientCount >= 2)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
         // 데이터 받기
-        retval = recvn(client_sock, buf, BUFSIZE, 0);
+        //x좌표
+        PLAYER_INFO tPlayerInfo;
+        retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
         if (retval == SOCKET_ERROR)
         {
             err_display("recv()");
@@ -177,13 +185,16 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         else if (retval == 0)
             break;
 
+
         // 받은 데이터 출력
         buf[retval] = '\0';
-        printf("[TCP/%s:%d] %s\n", inet_ntoa(clientaddr.sin_addr),
-            ntohs(clientaddr.sin_port), buf);
+        printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+
+        g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+        g_tStoreData.iClientIndex = iCurIndex;
 
         // 데이터 보내기
-        retval = send(client_sock, buf, retval, 0);
+        retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
         if (retval == SOCKET_ERROR)
         {
             err_display("send()");
@@ -203,6 +214,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             {
                 g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //자신이 참조하고있던 인덱스로 바꿔줌
                 g_iWaitClientIndex[iCurIndex] = -1;
+                SetEvent(g_hClientEvent[g_iWaitClientIndex[i]]);
                 break;
             }
         }

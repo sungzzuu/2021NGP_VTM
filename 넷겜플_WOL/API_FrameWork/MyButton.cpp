@@ -48,16 +48,16 @@ void CMyButton::Late_Update()
 			CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_STAGE);
 			return;
 		}
-		else if (!lstrcmp(L"OPTION_MENU", m_pFrameKey))
-		{
-			CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_EDIT);
-			return;
-		}
-		else if (!lstrcmp(L"QUIT_MENU", m_pFrameKey))
-		{
-			DestroyWindow(g_hWnd);
-			return;
-		}
+		//else if (!lstrcmp(L"OPTION_MENU", m_pFrameKey))
+		//{
+		//	CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_EDIT);
+		//	return;
+		//}
+		//else if (!lstrcmp(L"QUIT_MENU", m_pFrameKey))
+		//{
+		//	DestroyWindow(g_hWnd);
+		//	return;
+		//}
 	}
 	
 

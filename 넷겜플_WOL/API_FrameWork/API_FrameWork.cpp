@@ -6,6 +6,8 @@
 
 #include "MainGame.h"
 
+#include "DataMgr.h"
+
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -27,7 +29,13 @@ DWORD WINAPI ServerProcess(LPVOID arg);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
+
+HANDLE hGameEvent;
+HANDLE hSocketEvent;
+
 char SERVERIP[512] = "127.0.0.1";
+
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -59,7 +67,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	mainGame.Initialize();
 
 	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
-	//hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
 	DWORD	dwTime1 = GetTickCount();
 
@@ -73,8 +81,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		if (dwTime1 + 10 < GetTickCount())
 		{
-			mainGame.Update();
+            WaitForSingleObject(hGameEvent, INFINITE);
+            
+            mainGame.Update();
 			mainGame.Late_Update();
+
+            SetEvent(hSocketEvent);
 
 			// 서버 통신 진행
 
@@ -85,16 +97,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     }
 
+    CDataMgr::Get_Instance()->Destroy_Instance();
+
     return (int) msg.wParam;
 }
 
 
 
-//
-//  함수: MyRegisterClass()
-//
-//  목적: 창 클래스를 등록합니다.
-//
+
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -116,16 +126,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   함수: InitInstance(HINSTANCE, int)
-//
-//   목적: 인스턴스 핸들을 저장하고 주 창을 만듭니다.
-//
-//   설명:
-//
-//        이 함수를 통해 인스턴스 핸들을 전역 변수에 저장하고
-//        주 프로그램 창을 만든 다음 표시합니다.
-//
+
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
@@ -152,16 +153,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-//
-//  함수: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  목적:  주 창의 메시지를 처리합니다.
-//
-//  WM_COMMAND  - 응용 프로그램 메뉴를 처리합니다.
-//  WM_PAINT    - 주 창을 그립니다.
-//  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
-//
-//
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -194,8 +186,6 @@ void err_display(char* msg)
 	printf("[%s] %s", msg, (char*)lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }
-
-
 void err_quit(char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -230,6 +220,9 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 
 DWORD WINAPI ServerProcess(LPVOID arg)
 {
+    //게임 먼저 실행
+    hGameEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
+    hSocketEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     int retval;
 
     // 윈속 초기화
@@ -252,27 +245,20 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     if (retval == SOCKET_ERROR)
         err_quit("connect()");
 
-    char str[] = "클라에서 왔다.";
-    char buf[BUFSIZ + 1];
-
-    int len = strlen(str);
-    while (true)
+    while (1)
     {
-        // 데이터 보내기 -> 고정 길이 - 파일 크기 -> 버퍼사이즈
-        retval = send(sock, (char*)&len, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-        if (retval == SOCKET_ERROR) {
+        WaitForSingleObject(hSocketEvent, INFINITE);
+        
+        //자기 좌표 보내기
+        PLAYER_INFO tPlayerInfo = CDataMgr::Get_Instance()->m_tPlayerInfo;
+        retval = send(sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+        if (retval == SOCKET_ERROR)
             err_display("send()");
-            return 0;
-        }
 
-        retval = send(sock, str, strlen(str) + 1, 0);
-        if (retval == SOCKET_ERROR) {
-            err_display("send()");
-            return 0;
-        }
 
-        // 데이터 받기
-        retval = recvn(sock, buf, BUFSIZ, 0);
+        //모든 좌표 받기
+
+        retval = recvn(sock, (char*)&(CDataMgr::Get_Instance()->m_tStoreData), sizeof(STORE_DATA), 0);
         if (retval == SOCKET_ERROR)
         {
             err_display("recv()");
@@ -280,18 +266,13 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         }
         else if (retval == 0)
             break;
+
+
+        SetEvent(hGameEvent);
     }
 
+    SetEvent(hGameEvent);
 
-    //// 데이터 받기
-    //retval = recvn(sock, (char*)&len, sizeof(int), 0);
-    //if (retval == SOCKET_ERROR) {
-    //    err_display("recv()");
-    //    break;
-    //}
-    //else if (retval == 0)
-    //    break;
-    // closesocket()
     closesocket(sock);
 
     // 윈속 종료

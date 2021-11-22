@@ -115,6 +115,9 @@
     <Filter Include="소스 파일\01.Obj\10.Potion">
       <UniqueIdentifier>{57499108-e112-42d9-af0a-4de402d456fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\98.Manager\08.DataMgr">
+      <UniqueIdentifier>{29cbe83f-8a38-4170-9e14-b4ab5bbcf1f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -219,6 +222,9 @@
     <ClInclude Include="Effect.h">
       <Filter>소스 파일\01.Obj\12.Effect</Filter>
     </ClInclude>
+    <ClInclude Include="DataMgr.h">
+      <Filter>소스 파일\98.Manager\08.DataMgr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -316,6 +322,9 @@
     </ClCompile>
     <ClCompile Include="Effect.cpp">
       <Filter>소스 파일\01.Obj\12.Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="DataMgr.cpp">
+      <Filter>소스 파일\98.Manager\08.DataMgr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

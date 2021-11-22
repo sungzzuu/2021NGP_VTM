@@ -5,6 +5,18 @@ VisualStudioVersion = 16.0.31829.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NGP_Server", "NGP_Server\NGP_Server.vcxproj", "{31E77C5C-121F-4C3F-BC15-5B84E2829BF2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Headers", "Headers", "{E5BF106C-C337-4BA0-8A2C-2B5F414C6C3D}"
+	ProjectSection(SolutionItems) = preProject
+		..\넷겜플_WOL\Headers\AbstractFactory.h = ..\넷겜플_WOL\Headers\AbstractFactory.h
+		..\넷겜플_WOL\Headers\Define.h = ..\넷겜플_WOL\Headers\Define.h
+		..\넷겜플_WOL\Headers\Enum.h = ..\넷겜플_WOL\Headers\Enum.h
+		..\넷겜플_WOL\Headers\Extern.h = ..\넷겜플_WOL\Headers\Extern.h
+		..\넷겜플_WOL\Headers\Function.h = ..\넷겜플_WOL\Headers\Function.h
+		..\넷겜플_WOL\Headers\Functor.h = ..\넷겜플_WOL\Headers\Functor.h
+		..\넷겜플_WOL\Headers\Include.h = ..\넷겜플_WOL\Headers\Include.h
+		..\넷겜플_WOL\Headers\Struct.h = ..\넷겜플_WOL\Headers\Struct.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

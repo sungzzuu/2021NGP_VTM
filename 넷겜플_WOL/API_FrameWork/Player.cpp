@@ -12,6 +12,9 @@
 #include "BlastAttack.h"
 #include "CollisionMgr.h"
 
+
+#include "DataMgr.h"
+
 CPlayer::CPlayer()
 	: m_fPoSize(0.f)
 {
@@ -110,6 +113,12 @@ int CPlayer::Update()
 	Scene_Change();
 	Frame_Move();
 	//cout << m_tInfo.fX << ", " << m_tInfo.fY << endl;
+
+
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos = m_tInfo;
+
+
+
 	return OBJ_NOEVENT;
 }
 
@@ -154,8 +163,6 @@ void CPlayer::Late_Update()
 void CPlayer::Render(HDC _DC)
 {
 	Update_Rect();
-	int iScrollX = (int)CScrollMgr::Get_Instance()->Get_ScrollX();
-	int iScrollY = (int)CScrollMgr::Get_Instance()->Get_ScrollY();
 
 	HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(m_pFrameKey);
 
@@ -164,13 +171,34 @@ void CPlayer::Render(HDC _DC)
 	//cout << "Player xy: " << m_tInfo.fX << " , " << m_tInfo.fY << endl;
 
 	GdiTransparentBlt(_DC
-		, m_tRect.left + iScrollX + Image_Dif_X, m_tRect.top + iScrollY + Image_Dif_Y
+		, m_tRect.left + Image_Dif_X, m_tRect.top + Image_Dif_Y
 		, CHAR_CX, CHAR_CY
 		, hMemDC
 		, m_tFrame.iFrameStart * 180, m_tFrame.iFrameScene * 182	//시작좌표
 		, 180, 182													//길이
 		, RGB(255, 0, 255));
 
+
+	for (int i = 0; i < 4; ++i)
+	{
+
+		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+		if (i != tStoreData.iClientIndex)
+		{
+			RECT	tRect;
+			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
+			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
+
+			GdiTransparentBlt(_DC
+				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y
+				, CHAR_CX, CHAR_CY
+				, hMemDC
+				, m_tFrame.iFrameStart * 180, m_tFrame.iFrameScene * 182	
+				, 180, 182													
+				, RGB(255, 0, 255));
+		}
+		
+	}
 
 }
 

@@ -11,5 +11,6 @@
 #include "Define.h"
 #include "Struct.h"
 
+#include "Include.h"
 
 #endif //PCH_H

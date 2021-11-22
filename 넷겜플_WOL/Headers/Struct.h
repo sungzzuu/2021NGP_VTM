@@ -38,4 +38,17 @@ typedef struct tagFrame
 	DWORD	dwFrameTime;
 }FRAME;
 
+/// ///////////////////////////////////////////
+typedef struct tagPlayerInfo
+{
+	INFO tPos;
+
+}PLAYER_INFO;
+
+typedef struct tagStoreData
+{
+	INFO tPlayersPos[4] = {0};
+	int iClientIndex = 0;
+}STORE_DATA;
+
 #endif // !__STRUCT_H__
