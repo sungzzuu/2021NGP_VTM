@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <fstream>
 #include "Define.h"
-#include "Struct.h"
 
 #include "Include.h"
 #include "Timer.h"

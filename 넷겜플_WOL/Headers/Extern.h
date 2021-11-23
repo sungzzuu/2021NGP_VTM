@@ -4,6 +4,6 @@
 #define __EXTERN_H__
 
 extern HWND g_hWnd;
-extern POTIONRES g_tHpPotionInfo;
+extern POTIONRES g_tHpPotionRes;
 
 #endif // !__EXTERN_H__

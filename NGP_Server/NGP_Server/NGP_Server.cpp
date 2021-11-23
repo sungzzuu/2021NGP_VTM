@@ -11,13 +11,15 @@ HANDLE g_hClientEvent[4];
 int g_iWaitClientIndex[4];
 int g_iClientCount = 0; //접속한 클라 갯수
 
-POINT g_tPosition[4];
 CGameTimer m_GameTimer;
 
 // 체력약 관련
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
+
+STORE_DATA g_tStoreData;
+bool isGameStart = false;
 
 
 DWORD WINAPI ProcessClient(LPVOID arg);
@@ -183,8 +185,50 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
     while (1)
     {
+        if (!isGameStart)
+        {
+            if (g_iClientCount < 4)
+                continue;
+            else
+                isGameStart = true;
+        }
+        
         if (g_iClientCount >= 2)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
+
+
+
+        //////////////////////////////////////////////////////
+                // 데이터 받기
+        //x좌표
+        PLAYER_INFO tPlayerInfo;
+        retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            break;
+        }
+        else if (retval == 0)
+            break;
+
+
+        // 받은 데이터 출력
+        buf[retval] = '\0';
+        printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+
+        g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+        g_tStoreData.iClientIndex = iCurIndex;
+
+        // 데이터 보내기
+        retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("send()");
+            break;
+        }
+
+        //////////////////////////////////////////////////////
+
 
 
         // 이스레드가 끝났다면 FALSE 리턴하므로
