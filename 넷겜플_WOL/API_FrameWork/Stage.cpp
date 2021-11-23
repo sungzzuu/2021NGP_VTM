@@ -54,7 +54,7 @@ void CStage::Initialize()
 	CObjMgr::Get_Instance()->Add_Object(OBJID::INGAME_UI, pObj);
 	
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Map/WOL_TILE_DUNGEON.bmp", L"WOL_TILE_DUNGEON");
-	CTileMgr::Get_Instance()->Load_Tile();
+	//CTileMgr::Get_Instance()->Load_Tile();
 
 	//m_pPlayer = CAbstractFactory<CPlayer>::Create();
 	//m_pPlayer->Set_Target(pObj1);
