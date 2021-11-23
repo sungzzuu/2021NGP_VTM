@@ -17,6 +17,7 @@ CGameTimer m_GameTimer;
 // 체력약 관련
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
+LONG iHpPotionIndex;
 
 
 DWORD WINAPI ProcessClient(LPVOID arg);
@@ -245,12 +246,12 @@ void CreateHpPotion()
         EnterCriticalSection(&g_csHpPotion);
 
         fPotionCreateTime = 0.f;
-        g_tHpPotionInfo.cnt = 0;
-        g_tHpPotionInfo.bCreateOn = true;
-        g_tHpPotionInfo.index = 0;
-        g_tHpPotionInfo.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
-        g_tHpPotionInfo.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
-        printf("포션생성\n");
+        g_tHpPotionInfo.thpPotionCreate.cnt = 0;
+        g_tHpPotionInfo.thpPotionCreate.bCreateOn = true;
+        g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
+        g_tHpPotionInfo.thpPotionCreate.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
+        g_tHpPotionInfo.thpPotionCreate.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
+        //printf("포션생성\n");
         LeaveCriticalSection(&g_csHpPotion);
 
     }
@@ -276,17 +277,30 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
 
         return FALSE;
     }
-    if (g_tHpPotionInfo.bCreateOn)
+    
+    // [체력약생성] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionCreate.bCreateOn)
     {
-        g_tHpPotionInfo.cnt++;
+        g_tHpPotionInfo.thpPotionCreate.cnt++;
 
         // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
-        if (g_tHpPotionInfo.cnt == g_iClientCount)
+        if (g_tHpPotionInfo.thpPotionCreate.cnt == g_iClientCount)
         {
-            ZeroMemory(&g_tHpPotionInfo, sizeof(HpPotionInfo));
+            ZeroMemory(&g_tHpPotionInfo.thpPotionCreate, sizeof(HpPotionCreate));
         }
     }
 
+    // [체력약삭제] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionDelete.bDeleteOn)
+    {
+        g_tHpPotionInfo.thpPotionDelete.cnt++;
+
+        // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
+        if (g_tHpPotionInfo.thpPotionDelete.cnt == g_iClientCount)
+        {
+            ZeroMemory(&g_tHpPotionInfo.thpPotionDelete, sizeof(HpPotionDelete));
+        }
+    }
     LeaveCriticalSection(&g_csHpPotion);
 
 
@@ -303,5 +317,20 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
         return FALSE;
 
     // 충돌일 경우 처리 - 맵에서 삭제 및 다른 클라에 알리기
+    if (tHpPotionRes.bCollision)
+    {
+        //printf("포션삭제\n");
 
+        // 접속 클라 1개인 경우
+        if (g_iClientCount == 1)
+            return TRUE;
+
+        g_tHpPotionInfo.thpPotionDelete.bDeleteOn = true;
+        g_tHpPotionInfo.thpPotionDelete.cnt = 1;
+        g_tHpPotionInfo.thpPotionDelete.index = tHpPotionRes.iIndex;
+
+
+    }
+
+    return TRUE;
 }
