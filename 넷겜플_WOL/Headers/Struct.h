@@ -42,7 +42,7 @@ typedef struct tagFrame
 typedef struct tagPlayerInfo
 {
 	INFO tPos;
-
+	//FRAME tFrame;
 }PLAYER_INFO;
 
 typedef struct tagStoreData

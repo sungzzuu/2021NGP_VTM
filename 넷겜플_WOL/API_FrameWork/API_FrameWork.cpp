@@ -33,8 +33,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] = "127.0.0.1";
-
+char SERVERIP[512] = /*"172.20.10.9"*/ "127.0.0.1";
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,

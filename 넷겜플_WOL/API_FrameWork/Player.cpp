@@ -115,7 +115,10 @@ int CPlayer::Update()
 	//cout << m_tInfo.fX << ", " << m_tInfo.fY << endl;
 
 
+	/// ////////////////////////////////////////////////
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos = m_tInfo;
+	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
+	/// ////////////////////////////////////////////////
 
 
 
@@ -181,7 +184,6 @@ void CPlayer::Render(HDC _DC)
 
 	for (int i = 0; i < 4; ++i)
 	{
-
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
 		if (i != tStoreData.iClientIndex)
 		{

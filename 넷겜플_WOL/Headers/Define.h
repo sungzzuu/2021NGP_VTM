@@ -3,8 +3,11 @@
 #ifndef __DEFINE_H__
 #define __DEFINE_H__
 
-#define WINCX 1280
-#define WINCY 720
+//#define WINCX 1280
+//#define WINCY 720
+#define WINCX 800
+#define WINCY 600
+
 
 #define SAFE_DELETE(p) if(p) { delete p; p = nullptr; }
 #define SAFE_DELETE_ARR(p) if(p) { delete[] p; p = nullptr; }
