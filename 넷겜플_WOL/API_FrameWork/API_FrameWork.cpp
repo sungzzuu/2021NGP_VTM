@@ -5,8 +5,11 @@
 #include "API_FrameWork.h"
 
 #include "MainGame.h"
+#include "Potion.h"
+#include "ObjMgr.h"
 
 #include "DataMgr.h"
+
 
 #define MAX_LOADSTRING 100
 
@@ -26,6 +29,7 @@ void err_display(char* msg);
 void err_quit(char* msg);
 int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
+bool RecvHpPotionInfo(SOCKET sock);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
@@ -35,6 +39,10 @@ HANDLE hSocketEvent;
 
 char SERVERIP[512] = /*"172.20.10.9"*/ "127.0.0.1";
 
+// 체력약 관련 변수, 함수
+POTIONRES g_tHpPotionRes;
+void Add_Potion(HpPotionCreate);
+void Delete_Potion(HpPotionDelete hpPotionDelete);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -266,6 +274,13 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         else if (retval == 0)
             break;
 
+        //////////////////////////////////////////////////////////
+
+        // 이곳에 각각의 함수 추가! 주고 받는 것
+        retval = RecvHpPotionInfo(sock);
+
+        if (retval == FALSE)
+            break;
 
         SetEvent(hGameEvent);
     }
@@ -276,4 +291,63 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 
     // 윈속 종료
     WSACleanup();
+}
+
+
+bool RecvHpPotionInfo(SOCKET sock)
+{
+    int retval;
+
+    // 체력약 정보받기 생성&삭제
+    HpPotionInfo tHpPotionInfo;
+    retval = recvn(sock, (char*)&tHpPotionInfo, sizeof(HpPotionInfo), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    // 체력약 생성
+    if (tHpPotionInfo.thpPotionCreate.bCreateOn)
+    {
+        Add_Potion(tHpPotionInfo.thpPotionCreate);
+        printf("체력약 생성\n");
+    }
+
+    // 체력약 삭제
+    if (tHpPotionInfo.thpPotionDelete.bDeleteOn)
+    {
+        Delete_Potion(tHpPotionInfo.thpPotionDelete);
+        printf("체력약 삭제됨(다른 클라에 의해)\n");
+    }
+
+    // 체력약 충돌 정보 보내기
+    retval = send(sock, (char*)&g_tHpPotionRes, sizeof(POTIONRES), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return 0;
+    }
+
+    ZeroMemory(&g_tHpPotionRes, sizeof(POTIONRES));
+
+    return TRUE;
+
+
+}
+
+void Add_Potion(HpPotionCreate hpPotionCreate)
+{
+    CObj* pObj1 = CAbstractFactory<CPotion>::Create();
+    pObj1->Set_Pos(hpPotionCreate.pos.x, hpPotionCreate.pos.y);
+    dynamic_cast<CPotion*>(pObj1)->SetIndex(hpPotionCreate.index);
+    CObjMgr::Get_Instance()->Add_Object(OBJID::GOLD, pObj1);
+}
+
+void Delete_Potion(HpPotionDelete hpPotionDelete)
+{
+    // index 일치하는 체력약 찾아서 삭제하기
+    CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
 }

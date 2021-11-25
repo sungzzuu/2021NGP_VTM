@@ -11,12 +11,15 @@ HANDLE g_hClientEvent[4];
 int g_iWaitClientIndex[4];
 int g_iClientCount = 0; //접속한 클라 갯수
 
-POINT g_tPosition[4];
 CGameTimer m_GameTimer;
 
 // 체력약 관련
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
+LONG iHpPotionIndex;
+
+STORE_DATA g_tStoreData;
+bool isGameStart = false;
 
 
 DWORD WINAPI ProcessClient(LPVOID arg);
@@ -182,8 +185,50 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
     while (1)
     {
+        if (!isGameStart)
+        {
+            if (g_iClientCount < 4)
+                continue;
+            else
+                isGameStart = true;
+        }
+        
         if (g_iClientCount >= 2)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
+
+
+
+        //////////////////////////////////////////////////////
+                // 데이터 받기
+        //x좌표
+        PLAYER_INFO tPlayerInfo;
+        retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            break;
+        }
+        else if (retval == 0)
+            break;
+
+
+        // 받은 데이터 출력
+        buf[retval] = '\0';
+        printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+
+        g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+        g_tStoreData.iClientIndex = iCurIndex;
+
+        // 데이터 보내기
+        retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("send()");
+            break;
+        }
+
+        //////////////////////////////////////////////////////
+
 
 
         // 이스레드가 끝났다면 FALSE 리턴하므로
@@ -245,12 +290,12 @@ void CreateHpPotion()
         EnterCriticalSection(&g_csHpPotion);
 
         fPotionCreateTime = 0.f;
-        g_tHpPotionInfo.cnt = 0;
-        g_tHpPotionInfo.bCreateOn = true;
-        g_tHpPotionInfo.index = 0;
-        g_tHpPotionInfo.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
-        g_tHpPotionInfo.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
-        printf("포션생성\n");
+        g_tHpPotionInfo.thpPotionCreate.cnt = 0;
+        g_tHpPotionInfo.thpPotionCreate.bCreateOn = true;
+        g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
+        g_tHpPotionInfo.thpPotionCreate.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
+        g_tHpPotionInfo.thpPotionCreate.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
+        //printf("포션생성\n");
         LeaveCriticalSection(&g_csHpPotion);
 
     }
@@ -276,17 +321,30 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
 
         return FALSE;
     }
-    if (g_tHpPotionInfo.bCreateOn)
+    
+    // [체력약생성] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionCreate.bCreateOn)
     {
-        g_tHpPotionInfo.cnt++;
+        g_tHpPotionInfo.thpPotionCreate.cnt++;
 
         // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
-        if (g_tHpPotionInfo.cnt == g_iClientCount)
+        if (g_tHpPotionInfo.thpPotionCreate.cnt == g_iClientCount)
         {
-            ZeroMemory(&g_tHpPotionInfo, sizeof(HpPotionInfo));
+            ZeroMemory(&g_tHpPotionInfo.thpPotionCreate, sizeof(HpPotionCreate));
         }
     }
 
+    // [체력약삭제] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionDelete.bDeleteOn)
+    {
+        g_tHpPotionInfo.thpPotionDelete.cnt++;
+
+        // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
+        if (g_tHpPotionInfo.thpPotionDelete.cnt == g_iClientCount)
+        {
+            ZeroMemory(&g_tHpPotionInfo.thpPotionDelete, sizeof(HpPotionDelete));
+        }
+    }
     LeaveCriticalSection(&g_csHpPotion);
 
 
@@ -303,5 +361,20 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
         return FALSE;
 
     // 충돌일 경우 처리 - 맵에서 삭제 및 다른 클라에 알리기
+    if (tHpPotionRes.bCollision)
+    {
+        //printf("포션삭제\n");
 
+        // 접속 클라 1개인 경우
+        if (g_iClientCount == 1)
+            return TRUE;
+
+        g_tHpPotionInfo.thpPotionDelete.bDeleteOn = true;
+        g_tHpPotionInfo.thpPotionDelete.cnt = 1;
+        g_tHpPotionInfo.thpPotionDelete.index = tHpPotionRes.iIndex;
+
+
+    }
+
+    return TRUE;
 }

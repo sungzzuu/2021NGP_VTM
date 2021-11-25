@@ -2,6 +2,7 @@
 #include "ObjMgr.h"
 #include "Obj.h"
 #include "CollisionMgr.h"
+#include "Potion.h"
 
 CObjMgr* CObjMgr::m_pInstance = nullptr;
 
@@ -134,4 +135,16 @@ bool CObjMgr::Get_AllDead(OBJID::ID _eID)
 		return true;
 	else
 		return false;
+}
+
+void CObjMgr::Delete_Potion(LONG index)
+{
+	for (auto& hpPotion : m_listObj[OBJID::GOLD])
+	{
+		if (dynamic_cast<CPotion*>(hpPotion)->GetIndex() == index)
+		{
+			hpPotion->Set_Dead();
+			break;
+		}
+	}
 }
