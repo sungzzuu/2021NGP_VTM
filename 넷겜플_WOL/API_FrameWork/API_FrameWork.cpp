@@ -37,7 +37,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] = /*"172.30.1.46"*//*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ "127.0.0.1";
+char SERVERIP[512] = "172.30.1.46"/*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ /*"127.0.0.1"*/;
 
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionRes;
@@ -86,7 +86,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 
-		if (dwTime1 + 20  < GetTickCount())
+		if (dwTime1 + 10  < GetTickCount())
 		{
             WaitForSingleObject(hGameEvent, INFINITE);
             
