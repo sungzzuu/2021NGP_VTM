@@ -8,6 +8,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
+
+#include <vector>
+#include <list>
+#include <map>
+
 #include "Define.h"
 
 #include "Include.h"
