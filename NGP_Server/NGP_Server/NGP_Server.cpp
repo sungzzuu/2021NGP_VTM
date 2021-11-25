@@ -139,6 +139,9 @@ int main(int argc, char* argv[])
             break;
         }
 
+        int nagleopt = TRUE;
+        setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&nagleopt, sizeof(nagleopt));
+
         tThread.sock = client_sock;
         ++g_iClientCount;
         ++tThread.iIndex;

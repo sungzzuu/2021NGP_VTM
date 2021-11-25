@@ -37,7 +37,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] = "192.168.0.134"/*"192.168.120.31"*/ /*"172.20.10.9"*/ /*"127.0.0.1"*/;
+char SERVERIP[512] = /*"172.30.1.46"*//*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ "127.0.0.1";
 
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionRes;
@@ -251,6 +251,10 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR)
         err_quit("connect()");
+
+    int nagleopt = TRUE;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&nagleopt, sizeof(nagleopt));
+
 
     while (1)
     {
