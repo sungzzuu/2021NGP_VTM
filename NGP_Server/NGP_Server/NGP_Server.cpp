@@ -217,6 +217,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
 
         g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+        g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
         g_tStoreData.iClientIndex = iCurIndex;
 
         // 데이터 보내기

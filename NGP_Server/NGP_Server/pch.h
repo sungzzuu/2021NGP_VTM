@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
+#include <time.h>
 #include "Define.h"
 
 #include "Include.h"

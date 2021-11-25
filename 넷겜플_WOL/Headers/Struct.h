@@ -42,6 +42,7 @@ typedef struct tagFrame
 typedef struct tagPlayerInfo
 {
 	INFO tPos;
+	int iHp;
 	//FRAME tFrame;
 }PLAYER_INFO;
 
@@ -49,6 +50,7 @@ typedef struct tagStoreData
 {
 	INFO tPlayersPos[4] = {0};
 	int iClientIndex = 0;
+	int iHp[4] = {};
 }STORE_DATA;
 
 //////////////////////////////////// ¼­¹ö

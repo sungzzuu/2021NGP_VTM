@@ -3,6 +3,8 @@
 #include "ScrollMgr.h"
 #include "BmpMgr.h"
 
+#include "DataMgr.h"
+
 CUI::CUI()
 {
 }
@@ -18,6 +20,7 @@ void CUI::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_PLAYERBAR.bmp", L"UI_PLAYERBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"UI_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_MANABAR.bmp", L"UI_MANABAR");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/PLAYER_HPBAR.bmp", L"PLAYER_HPBAR");
 
 
 	m_tInfo.iCX = 120;
@@ -59,6 +62,27 @@ void CUI::Render(HDC _DC)
 		0, 0,
 		328, 80,
 		RGB(255, 0, 255));
+
+	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"PLAYER_HPBAR");
+	for (int i = 0; i < 4; ++i)
+	{
+		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+		if (i != tStoreData.iClientIndex)
+		{
+			RECT	tRect;
+			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
+			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
+
+			GdiTransparentBlt(_DC
+				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 70
+				, 260, 41
+				, hMemDC
+				, 0, 0
+				, 260, 41
+				, RGB(255, 0, 255));
+		}
+	}
+
 	//Rectangle(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 
 	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_HPBAR");
@@ -68,6 +92,26 @@ void CUI::Render(HDC _DC)
 		0, 0,
 		244, 32,
 		RGB(255, 0, 255));
+
+	for (int i = 0; i < 4; ++i)
+	{
+		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+		if (i != tStoreData.iClientIndex)
+		{
+			RECT	tRect;
+			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
+			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
+
+			GdiTransparentBlt(_DC
+				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 70
+				, 150 - (150 - tStoreData.iHp[i]), 10
+				, hMemDC
+				, 0,0
+				, 244, 32
+				, RGB(255, 0, 255));
+		}
+	}
+
 
 	//HFONT myFont = CreateFont(20, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Arial");
 	//HFONT oldFont = (HFONT)SelectObject(_DC, myFont);
