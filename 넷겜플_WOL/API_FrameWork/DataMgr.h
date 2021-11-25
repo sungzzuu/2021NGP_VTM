@@ -22,6 +22,9 @@ public:
 		SAFE_DELETE(m_pInstance);
 	}
 
+	TCHAR* GetFrameKey(int iFrameKey);
+	int SetFrameKey(TCHAR* pFrameKey);
+
 private:
 	static CDataMgr* m_pInstance;
 

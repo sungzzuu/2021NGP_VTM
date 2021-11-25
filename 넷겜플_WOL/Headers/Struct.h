@@ -39,16 +39,26 @@ typedef struct tagFrame
 }FRAME;
 
 /// ///////////////////////////////////////////
+typedef struct tagFrameInfo
+{
+	int		iFrameStart; // 열
+	int		iFrameScene; // 행
+	int		iFrameKey;// 프레임키 (PLAYER_DOWN)			
+
+}FRAME_INFO;
+
 typedef struct tagPlayerInfo
 {
-	INFO tPos;
-	//FRAME tFrame;
+	INFO		tPos;
+	FRAME_INFO	tFrameInfo;
+
 }PLAYER_INFO;
 
 typedef struct tagStoreData
 {
-	INFO tPlayersPos[4] = {0};
+	PLAYER_INFO tPlayersInfo[4] = {0};
 	int iClientIndex = 0;
+
 }STORE_DATA;
 
 //////////////////////////////////// 서버

@@ -200,7 +200,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
         //////////////////////////////////////////////////////
                 // 데이터 받기
-        //x좌표
+        // x좌표, 프레임정보
         PLAYER_INFO tPlayerInfo;
         retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
         if (retval == SOCKET_ERROR)
@@ -216,7 +216,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         buf[retval] = '\0';
         printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
 
-        g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+        g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
         g_tStoreData.iClientIndex = iCurIndex;
 
         // 데이터 보내기

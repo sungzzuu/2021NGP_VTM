@@ -117,6 +117,10 @@ int CPlayer::Update()
 
 	/// ////////////////////////////////////////////////
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos = m_tInfo;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameStart = m_tFrame.iFrameStart;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameScene= m_tFrame.iFrameScene;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameKey = CDataMgr::Get_Instance()->SetFrameKey(m_pFrameKey);
+
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
 	/// ////////////////////////////////////////////////
 
@@ -185,17 +189,22 @@ void CPlayer::Render(HDC _DC)
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+
+
 		if (i != tStoreData.iClientIndex)
 		{
+			PLAYER_INFO tPlayerInfo = tStoreData.tPlayersInfo[i];
 			RECT	tRect;
-			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
-			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
+			tRect.left = (LONG)(tPlayerInfo.tPos.fX - (m_tInfo.iCX >> 1));
+			tRect.top = (LONG)(tPlayerInfo.tPos.fY - (m_tInfo.iCY >> 1));
+
+			hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(CDataMgr::Get_Instance()->GetFrameKey(tPlayerInfo.tFrameInfo.iFrameKey));
 
 			GdiTransparentBlt(_DC
 				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y
 				, CHAR_CX, CHAR_CY
 				, hMemDC
-				, m_tFrame.iFrameStart * 180, m_tFrame.iFrameScene * 182	
+				, tPlayerInfo.tFrameInfo.iFrameStart * 180, tPlayerInfo.tFrameInfo.iFrameScene * 182
 				, 180, 182													
 				, RGB(255, 0, 255));
 		}
