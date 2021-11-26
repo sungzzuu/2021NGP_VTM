@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-
+#include <iostream>
 
 struct MyThread
 {
@@ -19,6 +19,7 @@ float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
 
 STORE_DATA g_tStoreData;
+PLAYER_INFO tPlayerInfo;
 bool isGameStart = false;
 
 
@@ -201,7 +202,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         //////////////////////////////////////////////////////
                 // 데이터 받기
         //x좌표
-        PLAYER_INFO tPlayerInfo;
+
         retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
         if (retval == SOCKET_ERROR)
         {
@@ -215,10 +216,14 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         // 받은 데이터 출력
         buf[retval] = '\0';
         printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+  
 
         g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
         g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
         g_tStoreData.iClientIndex = iCurIndex;
+        if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
+        else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
+
 
         // 데이터 보내기
         retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);

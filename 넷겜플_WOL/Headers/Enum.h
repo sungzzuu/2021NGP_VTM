@@ -17,4 +17,9 @@ namespace GROUPID
 {
 	enum ID { BACKGROUND, OBJECT, EFFECT, UI, END };
 }
+
+namespace TEAMNUM
+{
+	enum TEAM { NONE, TEAM1, TEAM2 };
+}
 #endif // !__ENUM_H__

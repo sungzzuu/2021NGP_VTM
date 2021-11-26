@@ -56,6 +56,7 @@ void CUI::Render(HDC _DC)
 	//int iScrollY = (int)CScrollMgr::Get_Instance()->Get_ScrollY();
 	int iScrollX = 0.f;
 	int iScrollY = 0.f;
+	PAINTSTRUCT ps;
 	TCHAR lpOut[10];
 	GdiTransparentBlt(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY,
 		200, 60,
@@ -110,9 +111,22 @@ void CUI::Render(HDC _DC)
 				, 0,0
 				, 244, 32
 				, RGB(255, 0, 255));
-
-			wsprintf(lpOut, TEXT("%d"), i+1);	//캐릭터 번호부여
-			TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+			if (tStoreData.team[i] == TEAMNUM::TEAM1)
+			{
+				BeginPaint(g_hWnd, &ps);
+				SetTextColor(_DC, RGB(0, 0, 255));
+				wsprintf(lpOut, TEXT("%d"), i + 1);	//캐릭터 번호부여
+				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+				EndPaint(g_hWnd, &ps);
+			}
+			else
+			{
+				BeginPaint(g_hWnd, &ps);
+				SetTextColor(_DC, RGB(255, 0, 0));
+				wsprintf(lpOut, TEXT("%d"), i + 1);	//캐릭터 번호부여
+				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+				EndPaint(g_hWnd, &ps);
+			}
 
 		}
 		else
@@ -121,8 +135,22 @@ void CUI::Render(HDC _DC)
 			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
 
-			wsprintf(lpOut, TEXT("ME"));
-			TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+			if (tStoreData.team[i] == TEAMNUM::TEAM1)
+			{
+				BeginPaint(g_hWnd, &ps);
+				SetTextColor(_DC, RGB(0, 0, 255));
+				wsprintf(lpOut, TEXT("ME(%d)"), tStoreData.iClientIndex + 1);
+				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+				EndPaint(g_hWnd, &ps);
+			}
+			else
+			{
+				BeginPaint(g_hWnd, &ps);
+				SetTextColor(_DC, RGB(255, 0, 0));
+				wsprintf(lpOut, TEXT("ME(%d)"), tStoreData.iClientIndex + 1);
+				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+				EndPaint(g_hWnd, &ps);
+			}
 		}
 	}	// 최대 체력 150 (현재체력 - 50)
 
