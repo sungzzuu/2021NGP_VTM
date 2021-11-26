@@ -20,7 +20,7 @@ void CUI::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_PLAYERBAR.bmp", L"UI_PLAYERBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"UI_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_MANABAR.bmp", L"UI_MANABAR");
-	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/PLAYER_HPBAR.bmp", L"PLAYER_HPBAR");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_BAR.bmp", L"UI_BAR");
 
 
 	m_tInfo.iCX = 120;
@@ -56,6 +56,7 @@ void CUI::Render(HDC _DC)
 	//int iScrollY = (int)CScrollMgr::Get_Instance()->Get_ScrollY();
 	int iScrollX = 0.f;
 	int iScrollY = 0.f;
+	TCHAR lpOut[10];
 	GdiTransparentBlt(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY,
 		200, 60,
 		hMemDC,
@@ -63,7 +64,7 @@ void CUI::Render(HDC _DC)
 		328, 80,
 		RGB(255, 0, 255));
 
-	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"PLAYER_HPBAR");
+	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
@@ -75,13 +76,13 @@ void CUI::Render(HDC _DC)
 
 			GdiTransparentBlt(_DC
 				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 70
-				, 260, 41
+				, 106, 15
 				, hMemDC
 				, 0, 0
 				, 260, 41
 				, RGB(255, 0, 255));
 		}
-	}
+	}	// 체력바 틀 사이즈 맞춤
 
 	//Rectangle(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 
@@ -103,14 +104,27 @@ void CUI::Render(HDC _DC)
 			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
 
 			GdiTransparentBlt(_DC
-				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 70
-				, 150 - (150 - tStoreData.iHp[i]), 10
+				, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
+				, tStoreData.iHp[i] - 50, 10
 				, hMemDC
 				, 0,0
 				, 244, 32
 				, RGB(255, 0, 255));
+
+			wsprintf(lpOut, TEXT("%d"), i+1);	//캐릭터 번호부여
+			TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+
 		}
-	}
+		else
+		{
+			RECT	tRect;
+			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
+			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
+
+			wsprintf(lpOut, TEXT("ME"));
+			TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
+		}
+	}	// 최대 체력 150 (현재체력 - 50)
 
 
 	//HFONT myFont = CreateFont(20, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Arial");
