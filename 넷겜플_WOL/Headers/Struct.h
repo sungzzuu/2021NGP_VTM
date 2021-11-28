@@ -44,6 +44,7 @@ typedef struct tagPlayerInfo
 	INFO tPos;
 	int iHp;
 	TEAMNUM::TEAM team;
+	bool start;
 	//FRAME tFrame;
 }PLAYER_INFO;
 
@@ -53,6 +54,7 @@ typedef struct tagStoreData
 	int iClientIndex = 0;
 	int iHp[4] = {};
 	TEAMNUM::TEAM team[4];
+	bool start;
 }STORE_DATA;
 
 //////////////////////////////////// ¼­¹ö

@@ -69,7 +69,7 @@ void CUI::Render(HDC _DC)
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
-		if (i != tStoreData.iClientIndex)
+		if (i != tStoreData.iClientIndex && tStoreData.start == true)
 		{
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
@@ -98,7 +98,7 @@ void CUI::Render(HDC _DC)
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
-		if (i != tStoreData.iClientIndex)
+		if (i != tStoreData.iClientIndex && tStoreData.start == true)
 		{
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));

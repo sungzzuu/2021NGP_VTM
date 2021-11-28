@@ -3,7 +3,7 @@
 #include "BmpMgr.h"
 #include "KeyMgr.h"
 #include "SceneMgr.h"
-
+#include <iostream>
 CMyButton::CMyButton()
 	
 {
@@ -19,7 +19,6 @@ void CMyButton::Initialize()
 {
 
 	m_eGroup = GROUPID::UI;
-
 }
 
 int CMyButton::Update()
@@ -29,6 +28,7 @@ int CMyButton::Update()
 
 void CMyButton::Late_Update()
 {
+
 	POINT pt = {};
 	GetCursorPos(&pt);
 	ScreenToClient(g_hWnd, &pt);
@@ -45,6 +45,7 @@ void CMyButton::Late_Update()
 	{
 		if (!lstrcmp(L"MAIN_MENU", m_pFrameKey))
 		{
+			b_Start = true;
 			CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_STAGE);
 			return;
 		}

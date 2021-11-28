@@ -183,25 +183,29 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     // 클라이언트 정보 얻기
     addrlen = sizeof(clientaddr);
     getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
-
+    bool once = true;
     while (1)
     {
-        if (!isGameStart)
-        {
-            if (g_iClientCount < 4)
-                continue;
-            else
-                isGameStart = true;
-        }
-        
-        if (g_iClientCount >= 2)
-            WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
-
+        //if (!isGameStart)
+        //{
+        //    if (g_iClientCount < 4)
+        //        continue;
+        //    else
+        //        isGameStart = true;
+        //}
+        //
+        //if (g_iClientCount >= 2)
+        //    WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
         //////////////////////////////////////////////////////
                 // 데이터 받기
         //x좌표
+
+        if (g_iClientCount == 4)    // 클라 4명이면 스타트
+        {
+            tPlayerInfo.start = true;
+        }
 
         retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
         if (retval == SOCKET_ERROR)
@@ -221,6 +225,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
         g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
         g_tStoreData.iClientIndex = iCurIndex;
+        g_tStoreData.start = tPlayerInfo.start;
         if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
         else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
 
