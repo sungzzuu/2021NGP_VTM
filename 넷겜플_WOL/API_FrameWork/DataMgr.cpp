@@ -2,6 +2,7 @@
 #include "DataMgr.h"
 #include "ObjMgr.h"
 #include "Obj.h"
+#include "BmpMgr.h"
 
 CDataMgr* CDataMgr::m_pInstance = nullptr;
 CDataMgr::CDataMgr()
@@ -59,21 +60,21 @@ void CDataMgr::SetAttackArr()
 {
 	list<CObj*> list_Attack = CObjMgr::Get_Instance()->Get_list(OBJID::ATTACK);
 
-	if (m_pAttackInfo != nullptr)
-		delete[] m_pAttackInfo;
+	if (m_pAttackData.pAttackInfo != nullptr)
+		delete[] m_pAttackData.pAttackInfo;
 
-	m_iSize = list_Attack.size();
-	m_pAttackInfo = new ATTACKINFO[m_iSize];
+	m_pAttackData.iSize = list_Attack.size();
+	m_pAttackData.pAttackInfo = new ATTACKINFO[m_pAttackData.iSize];
 
 	int cnt = 0;
 	for (auto& attack : list_Attack)
 	{
-		m_pAttackInfo[cnt].iType = attack->m_eAttackName;
-		m_pAttackInfo[cnt].tInfo = attack->Get_Info();
+		m_pAttackData.pAttackInfo[cnt].iType = attack->m_eAttackName;
+		m_pAttackData.pAttackInfo[cnt].tInfo = attack->Get_Info();
 		FRAME tFrame = attack->Get_Frame();
-		m_pAttackInfo[cnt].iFrameStart = tFrame.iFrameStart;
-		m_pAttackInfo[cnt].iFrameScene = tFrame.iFrameScene;
-		m_pAttackInfo[cnt].bCollision = false;
+		m_pAttackData.pAttackInfo[cnt].iFrameStart = tFrame.iFrameStart;
+		m_pAttackData.pAttackInfo[cnt].iFrameScene = tFrame.iFrameScene;
+		m_pAttackData.pAttackInfo[cnt].bCollision = false;
 		cnt++;
 
 		//tAttackInfo.iType = attack->m_eAttackName;
@@ -85,5 +86,55 @@ void CDataMgr::SetAttackArr()
 		//m_vecAttackInfo.push_back(tAttackInfo);
 	}
 
+}
+
+void CDataMgr::RenderOthersAttack(HDC _DC)
+{
+	//for (int i = 0; i < 3; i++)
+	//{
+	//	if (m_pOthersAttackData[i].iSize == 0)
+	//		continue;
+
+	//	for (int j = 0; j < m_pOthersAttackData[i].iSize; j++)
+	//	{
+	//		TCHAR*  pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType);
+	//		HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
+
+	//		//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
+	//		RECT tRect;
+	//		INFO tInfo = m_pOthersAttackData[i].pAttackInfo[j].tInfo;
+	//		tRect.left = (LONG)(tInfo.fX - (tInfo.iCX >> 1));
+	//		tRect.top = (LONG)(tInfo.fY - (tInfo.iCY >> 1));
+	//		tRect.right = (LONG)(tInfo.fX + (tInfo.iCX >> 1));
+	//		tRect.bottom = (LONG)(tInfo.fY + (tInfo.iCY >> 1));
+
+	//		GdiTransparentBlt(_DC
+	//			, tRect.left, tRect.top
+	//			, CHAR_CX, CHAR_CY
+	//			, hMemDC
+	//			, m_pOthersAttackData[i].pAttackInfo[j].iFrameStart * 200, m_pOthersAttackData[i].pAttackInfo[j].iFrameScene * 200	//시작좌표
+	//			, 200, 200													//길이
+	//			, RGB(255, 0, 255));
+	//	}
+	//	
+	//}
+	
+}
+
+TCHAR* CDataMgr::GetFrameKey_Attack(int iType)
+{
+	switch (iType)
+	{
+	case 0:
+		return L"Normal_ATTACK";
+	case 1:
+		return L"SKILL_FIREDRAGON";
+	case 2:
+		return L"Ice_ATTACK";
+	case 3:
+		return L"ICE_BLAST";
+	default:
+		break;
+	}
 }
 

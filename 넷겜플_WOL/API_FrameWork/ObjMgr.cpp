@@ -3,6 +3,7 @@
 #include "Obj.h"
 #include "CollisionMgr.h"
 #include "Potion.h"
+#include "DataMgr.h"
 
 CObjMgr* CObjMgr::m_pInstance = nullptr;
 
@@ -74,6 +75,12 @@ void CObjMgr::Render(HDC _DC)
 
 		for (auto& pObj : m_RenderGroup[i])
 			pObj->Render(_DC);
+
+		if (GROUPID::EFFECT == i)
+		{
+			// 다른 클라의 공격 렌더
+			CDataMgr::Get_Instance()->RenderOthersAttack(_DC);
+		}
 
 		m_RenderGroup[i].clear();
 	}

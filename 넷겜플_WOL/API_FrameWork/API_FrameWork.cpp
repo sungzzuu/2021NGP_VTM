@@ -350,8 +350,8 @@ bool SendRecvAttacks(SOCKET sock)
 
     // 공격 정보 보내기 - 1. 벡터의 크기
     CDataMgr::Get_Instance()->SetAttackArr();
-    ATTACKINFO* pAttackInfo = CDataMgr::Get_Instance()->m_pAttackInfo;
-    int iSize = CDataMgr::Get_Instance()->m_iSize;
+    ATTACKINFO* pAttackInfo = CDataMgr::Get_Instance()->m_pAttackData.pAttackInfo;
+    int iSize = CDataMgr::Get_Instance()->m_pAttackData.iSize;
 
     retval = send(sock, (char*)&iSize, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
     if (retval == SOCKET_ERROR)
@@ -375,26 +375,38 @@ bool SendRecvAttacks(SOCKET sock)
     }
     printf("vec.front(): %d\n", pAttackInfo[0].iType);
 
-    //// 공격 정보 받기 - 1. 벡터의 크기
-    //vecSize = 0;
-    //retval = recvn(sock, (char*)&vecSize, sizeof(int), 0);
-    //if (retval == SOCKET_ERROR)
-    //{
-    //    err_display("recv()");
-    //    return FALSE;
-    //}
-    //else if (retval == 0)
-    //    return FALSE;
+   
 
-    //// 공격 정보 받기 - 2. 벡터
-    //retval = recvn(sock, (char*)&CDataMgr::Get_Instance()->m_vecOthersAttackInfo, vecSize * sizeof(ATTACKINFO), 0);
-    //if (retval == SOCKET_ERROR)
+    //for (int i = 0; i < 3; i++)
     //{
-    //    err_display("recv()");
-    //    return FALSE;
+    //    // 공격 정보 받기 - 1. 배열의 크기
+    //    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    else if (retval == 0)
+    //        return FALSE;
+
+    //    CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
+
+    //    if (iSize == 0)
+    //        continue;
+
+    //    // 공격 정보 받기 - 2. 배열
+    //    retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    else if (retval == 0)
+    //        return FALSE;
+
+    //    printf("other_vec.front(): %d\n", CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[0].iType);
+
     //}
-    //else if (retval == 0)
-    //    return FALSE;
 
     return TRUE;
 }

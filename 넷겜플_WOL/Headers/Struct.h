@@ -107,4 +107,10 @@ typedef struct tagAttackInfo
 
 }ATTACKINFO;
 
+struct AttackData
+{
+	int iSize;
+	ATTACKINFO* pAttackInfo = nullptr;
+};
+
 #endif // !__STRUCT_H__

@@ -22,7 +22,7 @@ STORE_DATA g_tStoreData;
 bool isGameStart = false;
 
 // 공격 관련
-ATTACKINFO* g_pAttackInfo[4];
+AttackData g_pAttackData[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
@@ -410,11 +410,12 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
         return TRUE;
 
     // 동적배열 초기화
-    delete[] g_pAttackInfo[clientIndex];
-    g_pAttackInfo[clientIndex] = new ATTACKINFO[iSize];
+    delete[] g_pAttackData[clientIndex].pAttackInfo;
+    g_pAttackData[clientIndex].iSize = iSize;
+    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
     // 공격 정보 받기 - 2. 벡터
-    retval = recvn(sock, (char*)g_pAttackInfo[clientIndex], iSize * sizeof(ATTACKINFO), 0);
+    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
     if (retval == SOCKET_ERROR)
     {
         err_display("recv()");
@@ -423,17 +424,34 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     else if (retval == 0)
         return FALSE;
 
-    //printf("vec.front(): %d\n", g_pAttackInfo[clientIndex][0].iType);
+    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
+
+  
+    //for (int i = 0; i < 4; i++)
+    //{
+    //    if (i == clientIndex)
+    //        continue;
+
+    //    // 공격 정보 보내기 - 1. 배열의 크기
+    //    retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    iSize = g_pAttackData[i].iSize;
+
+    //    if (iSize == 0)
+    //        continue;
+
+    //    // 공격 정보 보내기 - 2. 배열
+    //    retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //}
 
     return TRUE;
-  
-//    // 벡터 하나에 데이터 넣기
-//
-//    // 공격 정보 보내기 - 1. 벡터의 크기
-//    retval = send(sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
-//    if (retval == SOCKET_ERROR)
-//    {
-//        err_display("send()");
-//        break;
-//    }
 }

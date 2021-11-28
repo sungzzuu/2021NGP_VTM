@@ -26,14 +26,18 @@ public:
 	int SetFrameKey(TCHAR* pFrameKey);
 
 	void SetAttackArr();	// 리스트 갱신
+	void RenderOthersAttack(HDC _DC);
+	TCHAR* GetFrameKey_Attack(int iType);
+
 private:
 	static CDataMgr* m_pInstance;
 
 public:
 	PLAYER_INFO			m_tPlayerInfo;
 	STORE_DATA			m_tStoreData;
-	ATTACKINFO*			m_pAttackInfo = nullptr;
-	int					m_iSize;
+	AttackData			m_pAttackData;
+	AttackData			m_pOthersAttackData[3];
+
 
 };
 
