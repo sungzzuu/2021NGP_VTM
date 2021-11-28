@@ -25,12 +25,15 @@ public:
 	TCHAR* GetFrameKey(int iFrameKey);
 	int SetFrameKey(TCHAR* pFrameKey);
 
+	void SetAttackArr();	// 리스트 갱신
 private:
 	static CDataMgr* m_pInstance;
 
 public:
-	PLAYER_INFO m_tPlayerInfo;
-	STORE_DATA m_tStoreData;
+	PLAYER_INFO			m_tPlayerInfo;
+	STORE_DATA			m_tStoreData;
+	ATTACKINFO*			m_pAttackInfo = nullptr;
+	int					m_iSize;
 
 };
 

@@ -34,6 +34,7 @@ void CIceAttack::Initialize()
 	dwTime = GetTickCount();
 
 	m_eGroup = GROUPID::EFFECT;
+	m_eAttackName = ATTACK::ICE;
 
 }
 

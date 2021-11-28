@@ -61,6 +61,13 @@ typedef struct tagStoreData
 
 }STORE_DATA;
 
+typedef struct tagStoreData_Attack
+{
+	PLAYER_INFO tPlayersInfo[4] = { 0 };
+	int iClientIndex = 0;
+
+}STORE_DATA_ATTACK;
+
 //////////////////////////////////// 서버
 struct HpPotionCreate
 {
@@ -83,11 +90,21 @@ struct HpPotionInfo
 	HpPotionDelete thpPotionDelete;
 };
 
-
 //struct HpPotion
 typedef struct tagHpPotionRes
 {
 	bool	bCollision;
 	int		iIndex;
 }POTIONRES;
+
+typedef struct tagAttackInfo
+{
+	int				iType;			// 4개의 공격 중에서 뭔지
+	INFO			tInfo;			// 좌표와 가로세로 크기
+	int				iFrameScene;	// 행
+	int				iFrameStart;	// 열
+	bool			bCollision;
+
+}ATTACKINFO;
+
 #endif // !__STRUCT_H__

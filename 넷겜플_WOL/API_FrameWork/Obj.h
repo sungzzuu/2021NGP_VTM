@@ -41,6 +41,7 @@ public:
 public:
 	const RECT& Get_Rect() const { return m_tRect; }
 	const INFO& Get_Info() const { return m_tInfo; }
+	const FRAME& Get_Frame() const { return m_tFrame; }
 
 	GROUPID::ID Get_GroupID() const { return m_eGroup; }
 
@@ -117,6 +118,9 @@ protected:
 	int		m_iHit_Idx;
 
 	DWORD	m_dDead_Time;
+
+public:
+	ATTACK::NAME m_eAttackName;
 
 };
 

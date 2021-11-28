@@ -48,6 +48,8 @@ void CFireAttack::Initialize()
 
 	m_dDead_Time = GetTickCount();
 
+	m_eAttackName = ATTACK::FIRE;
+
 }
 
 int CFireAttack::Update()

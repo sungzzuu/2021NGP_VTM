@@ -29,7 +29,8 @@ void err_display(char* msg);
 void err_quit(char* msg);
 int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
-bool RecvHpPotionInfo(SOCKET sock);
+bool SendRecvHpPotionInfo(SOCKET sock);
+bool SendRecvAttacks(SOCKET sock);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
@@ -37,7 +38,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] = "172.30.1.46"/*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ /*"127.0.0.1"*/;
+char SERVERIP[512] = /*"172.30.1.46"*//*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ "127.0.0.1";
 
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionRes;
@@ -278,11 +279,13 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         else if (retval == 0)
             break;
 
-        //////////////////////////////////////////////////////////
+        // 체력약
+        retval = SendRecvHpPotionInfo(sock);
+        if (retval == FALSE)
+            break;
 
-        // 이곳에 각각의 함수 추가! 주고 받는 것
-        retval = RecvHpPotionInfo(sock);
-
+        // 공격
+        retval = SendRecvAttacks(sock);
         if (retval == FALSE)
             break;
 
@@ -297,8 +300,7 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     WSACleanup();
 }
 
-
-bool RecvHpPotionInfo(SOCKET sock)
+bool SendRecvHpPotionInfo(SOCKET sock)
 {
     int retval;
 
@@ -340,6 +342,61 @@ bool RecvHpPotionInfo(SOCKET sock)
     return TRUE;
 
 
+}
+
+bool SendRecvAttacks(SOCKET sock)
+{
+    int retval;
+
+    // 공격 정보 보내기 - 1. 벡터의 크기
+    CDataMgr::Get_Instance()->SetAttackArr();
+    ATTACKINFO* pAttackInfo = CDataMgr::Get_Instance()->m_pAttackInfo;
+    int iSize = CDataMgr::Get_Instance()->m_iSize;
+
+    retval = send(sock, (char*)&iSize, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return 0;
+    }
+
+    if (iSize == 0)
+        return TRUE;
+
+    //if (iSize != 0)
+    //    printf("vec: %d\n", iSize);
+
+    // 공격 정보 보내기 - 2. 벡터
+    retval = send(sock, (char*)pAttackInfo, iSize * sizeof(ATTACKINFO), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return 0;
+    }
+    printf("vec.front(): %d\n", pAttackInfo[0].iType);
+
+    //// 공격 정보 받기 - 1. 벡터의 크기
+    //vecSize = 0;
+    //retval = recvn(sock, (char*)&vecSize, sizeof(int), 0);
+    //if (retval == SOCKET_ERROR)
+    //{
+    //    err_display("recv()");
+    //    return FALSE;
+    //}
+    //else if (retval == 0)
+    //    return FALSE;
+
+    //// 공격 정보 받기 - 2. 벡터
+    //retval = recvn(sock, (char*)&CDataMgr::Get_Instance()->m_vecOthersAttackInfo, vecSize * sizeof(ATTACKINFO), 0);
+    //if (retval == SOCKET_ERROR)
+    //{
+    //    err_display("recv()");
+    //    return FALSE;
+    //}
+    //else if (retval == 0)
+    //    return FALSE;
+
+    return TRUE;
 }
 
 void Add_Potion(HpPotionCreate hpPotionCreate)
