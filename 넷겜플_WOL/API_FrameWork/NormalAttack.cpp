@@ -32,7 +32,7 @@ void CNormalAttack::Initialize()
 	//m_eDir = UP;
 
 	m_eGroup = GROUPID::EFFECT;
-
+	m_eAttackName = ATTACK::NORMAL;
 
 }
 

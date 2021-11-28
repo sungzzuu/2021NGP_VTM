@@ -45,25 +45,36 @@ typedef struct tagFrame
 }FRAME;
 
 /// ///////////////////////////////////////////
+typedef struct tagFrameInfo
+{
+	int		iFrameStart; // 열
+	int		iFrameScene; // 행
+	int		iFrameKey;// 프레임키 (PLAYER_DOWN)			
+
+}FRAME_INFO;
+
 typedef struct tagPlayerInfo
 {
 	POS tPos = { 0 };
-	//FRAME tFrame;
+	FRAME_INFO	tFrameInfo;
+
 }PLAYER_INFO;
 
 typedef struct tagSkillInfo
 {
 	std::vector<POS> vecFirePos;
 	bool isHit = false;
-	//FRAME tFrame;
 }SKILL_INFO;
 
 typedef struct tagStoreData
 {
-	POS tPlayersPos[4] = { 0 };
-	SKILL_INFO tFiresPos[4];
+	PLAYER_INFO tPlayersInfo[4] = { 0 };
+	//SKILL_INFO tFiresPos[4];
 	int iClientIndex = 0;
+
 }STORE_DATA;
+
+
 
 //////////////////////////////////// 서버
 struct HpPotionCreate
@@ -87,11 +98,27 @@ struct HpPotionInfo
 	HpPotionDelete thpPotionDelete;
 };
 
-
 //struct HpPotion
 typedef struct tagHpPotionRes
 {
 	bool	bCollision;
 	int		iIndex;
 }POTIONRES;
+
+typedef struct tagAttackInfo
+{
+	int				iType;			// 4개의 공격 중에서 뭔지
+	INFO			tInfo;			// 좌표와 가로세로 크기
+	int				iFrameScene;	// 행
+	int				iFrameStart;	// 열
+	bool			bCollision;
+
+}ATTACKINFO;
+
+struct AttackData
+{
+	int iSize;
+	ATTACKINFO* pAttackInfo = nullptr;
+};
+
 #endif // !__STRUCT_H__

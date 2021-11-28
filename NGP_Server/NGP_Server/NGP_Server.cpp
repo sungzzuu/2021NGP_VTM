@@ -21,6 +21,8 @@ LONG iHpPotionIndex;
 STORE_DATA g_tStoreData;
 bool isGameStart = false;
 
+// 공격 관련
+AttackData g_pAttackData[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
@@ -32,6 +34,7 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
 // 체력약 관련
 void CreateHpPotion();
 bool SendRecv_HpPotionInfo(SOCKET sock);
+bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
 
 CRITICAL_SECTION g_csHpPotion;
 
@@ -143,6 +146,9 @@ int main(int argc, char* argv[])
             break;
         }
 
+        int nagleopt = TRUE;
+        setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&nagleopt, sizeof(nagleopt));
+
         tThread.sock = client_sock;
         ++g_iClientCount;
         ++tThread.iIndex;
@@ -212,13 +218,21 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
         
 
-        // 이스레드가 끝났다면 FALSE 리턴하므로
+
+        // 체력약
         if (!SendRecv_HpPotionInfo(client_sock))
         {
             SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
 
+        // 공격
+        if (!SendRecv_AttackInfo(client_sock, iCurIndex))
+        {
+            SetEvent(g_hClientEvent[iCurIndex]);
+            break;
+        }
+        
         SetEvent(g_hClientEvent[iCurIndex]);
     }
 
@@ -281,7 +295,7 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     //buf[retval] = '\0';
     //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
 
-    g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+    g_tStoreData.tPlayersInfo[iCurIndex].tPos = tPlayerInfo.tPos;
     g_tStoreData.iClientIndex = iCurIndex;
 
     // 데이터 보내기
@@ -389,6 +403,74 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
 
 
     }
+
+    return TRUE;
+}
+
+bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
+{
+    int retval;
+
+    // 공격 정보 받기 - 1. 벡터의 크기
+    int iSize = 0;
+    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    //if(iSize != 0)
+    //    printf("vec: %d\n", iSize);
+
+    if (iSize == 0)
+        return TRUE;
+
+    // 동적배열 초기화
+    delete[] g_pAttackData[clientIndex].pAttackInfo;
+    g_pAttackData[clientIndex].iSize = iSize;
+    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
+
+    // 공격 정보 받기 - 2. 벡터
+    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
+
+  
+    //for (int i = 0; i < 4; i++)
+    //{
+    //    if (i == clientIndex)
+    //        continue;
+
+    //    // 공격 정보 보내기 - 1. 배열의 크기
+    //    retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    iSize = g_pAttackData[i].iSize;
+
+    //    if (iSize == 0)
+    //        continue;
+
+    //    // 공격 정보 보내기 - 2. 배열
+    //    retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //}
 
     return TRUE;
 }

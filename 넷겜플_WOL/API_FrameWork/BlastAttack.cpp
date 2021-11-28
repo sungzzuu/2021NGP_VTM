@@ -34,6 +34,8 @@ void CBlastAttack::Initialize()
 	//m_eDir = UP;
 
 	m_eGroup = GROUPID::EFFECT;
+	m_eAttackName = ATTACK::BLAST;
+
 }
 
 int CBlastAttack::Update()

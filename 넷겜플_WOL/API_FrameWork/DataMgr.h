@@ -22,12 +22,22 @@ public:
 		SAFE_DELETE(m_pInstance);
 	}
 
+	TCHAR* GetFrameKey(int iFrameKey);
+	int SetFrameKey(TCHAR* pFrameKey);
+
+	void SetAttackArr();	// 리스트 갱신
+	void RenderOthersAttack(HDC _DC);
+	TCHAR* GetFrameKey_Attack(int iType);
+
 private:
 	static CDataMgr* m_pInstance;
 
 public:
-	PLAYER_INFO m_tPlayerInfo;
-	STORE_DATA m_tStoreData;
+	PLAYER_INFO			m_tPlayerInfo;
+	STORE_DATA			m_tStoreData;
+	AttackData			m_pAttackData;
+	AttackData			m_pOthersAttackData[3];
+
 
 };
 
