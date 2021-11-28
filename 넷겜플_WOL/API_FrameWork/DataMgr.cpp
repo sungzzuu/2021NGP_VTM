@@ -90,48 +90,57 @@ void CDataMgr::SetAttackArr()
 
 void CDataMgr::RenderOthersAttack(HDC _DC)
 {
-	//for (int i = 0; i < 3; i++)
-	//{
-	//	if (m_pOthersAttackData[i].iSize == 0)
-	//		continue;
+	for (int i = 0; i < 3; i++)
+	{
+		if (m_pOthersAttackData[i].iSize == 0)
+			continue;
 
-	//	for (int j = 0; j < m_pOthersAttackData[i].iSize; j++)
-	//	{
-	//		TCHAR*  pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType);
-	//		HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
+		for (int j = 0; j < m_pOthersAttackData[i].iSize; j++)
+		{
+			POINT size;
+			TCHAR*  pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size);
+			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"Normal_ATTACK");
 
-	//		//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
-	//		RECT tRect;
-	//		INFO tInfo = m_pOthersAttackData[i].pAttackInfo[j].tInfo;
-	//		tRect.left = (LONG)(tInfo.fX - (tInfo.iCX >> 1));
-	//		tRect.top = (LONG)(tInfo.fY - (tInfo.iCY >> 1));
-	//		tRect.right = (LONG)(tInfo.fX + (tInfo.iCX >> 1));
-	//		tRect.bottom = (LONG)(tInfo.fY + (tInfo.iCY >> 1));
+			//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
+			RECT tRect;
+			INFO tInfo = m_pOthersAttackData[i].pAttackInfo[j].tInfo;
+			tRect.left = (LONG)(tInfo.fX - (tInfo.iCX >> 1));
+			tRect.top = (LONG)(tInfo.fY - (tInfo.iCY >> 1));
+			tRect.right = (LONG)(tInfo.fX + (tInfo.iCX >> 1));
+			tRect.bottom = (LONG)(tInfo.fY + (tInfo.iCY >> 1));
 
-	//		GdiTransparentBlt(_DC
-	//			, tRect.left, tRect.top
-	//			, CHAR_CX, CHAR_CY
-	//			, hMemDC
-	//			, m_pOthersAttackData[i].pAttackInfo[j].iFrameStart * 200, m_pOthersAttackData[i].pAttackInfo[j].iFrameScene * 200	//시작좌표
-	//			, 200, 200													//길이
-	//			, RGB(255, 0, 255));
-	//	}
-	//	
-	//}
+			GdiTransparentBlt(_DC
+				, tRect.left, tRect.top
+				, CHAR_CX, CHAR_CY
+				, hMemDC
+				, m_pOthersAttackData[i].pAttackInfo[j].iFrameStart * size.x, m_pOthersAttackData[i].pAttackInfo[j].iFrameScene * size.y	//시작좌표
+				, size.x, size.y													//길이
+				, RGB(255, 0, 255));
+		}
+		
+	}
 	
 }
 
-TCHAR* CDataMgr::GetFrameKey_Attack(int iType)
+TCHAR* CDataMgr::GetFrameKey_Attack(int iType, POINT& pt)
 {
 	switch (iType)
 	{
 	case 0:
+		pt.x = 200;
+		pt.y = 200;
 		return L"Normal_ATTACK";
 	case 1:
+		pt.x = 180;
+		pt.y = 180;
 		return L"SKILL_FIREDRAGON";
 	case 2:
+		pt.x = 200;
+		pt.y = 200;
 		return L"Ice_ATTACK";
 	case 3:
+		pt.x = 200;
+		pt.y = 250;
 		return L"ICE_BLAST";
 	default:
 		break;

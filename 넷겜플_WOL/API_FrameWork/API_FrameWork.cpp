@@ -375,38 +375,41 @@ bool SendRecvAttacks(SOCKET sock)
     }
     printf("vec.front(): %d\n", pAttackInfo[0].iType);
 
-   
+    for (int i = 0; i < 3; i++)
+    {
+        iSize = 0;
+        // 공격 정보 받기 - 1. 배열의 크기
+        retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        else if (retval == 0)
+            return FALSE;
 
-    //for (int i = 0; i < 3; i++)
-    //{
-    //    // 공격 정보 받기 - 1. 배열의 크기
-    //    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //    else if (retval == 0)
-    //        return FALSE;
+        CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
 
-    //    CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
+        if (iSize == 0)
+            continue;
 
-    //    if (iSize == 0)
-    //        continue;
+        // 공격 정보 받기 - 2. 배열
+        if(CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo != nullptr)
+            delete[] CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo;
+        CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo = new ATTACKINFO[iSize];
 
-    //    // 공격 정보 받기 - 2. 배열
-    //    retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //    else if (retval == 0)
-    //        return FALSE;
+        retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        else if (retval == 0)
+            return FALSE;
 
-    //    printf("other_vec.front(): %d\n", CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[0].iType);
+        //printf("other_vec.front(): %d\n", CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[0].iType);
 
-    //}
+    }
 
     return TRUE;
 }

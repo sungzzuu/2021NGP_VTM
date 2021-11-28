@@ -61,13 +61,6 @@ typedef struct tagStoreData
 
 }STORE_DATA;
 
-typedef struct tagStoreData_Attack
-{
-	PLAYER_INFO tPlayersInfo[4] = { 0 };
-	int iClientIndex = 0;
-
-}STORE_DATA_ATTACK;
-
 //////////////////////////////////// ¼­¹ö
 struct HpPotionCreate
 {
@@ -109,7 +102,7 @@ typedef struct tagAttackInfo
 
 struct AttackData
 {
-	int iSize;
+	int iSize = 0;
 	ATTACKINFO* pAttackInfo = nullptr;
 };
 
