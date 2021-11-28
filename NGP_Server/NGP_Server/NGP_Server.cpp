@@ -295,7 +295,7 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     //buf[retval] = '\0';
     //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
 
-    g_tStoreData.tPlayersInfo[iCurIndex].tPos = tPlayerInfo.tPos;
+    g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
 
     // 데이터 보내기
