@@ -120,7 +120,7 @@ protected:
 	DWORD	m_dDead_Time;
 
 public:
-	ATTACK::NAME m_eAttackName;
+	size_t	m_iAttackName;
 
 };
 

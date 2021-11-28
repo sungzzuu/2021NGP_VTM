@@ -18,8 +18,4 @@ namespace GROUPID
 	enum ID { BACKGROUND, OBJECT, EFFECT, UI, END };
 }
 
-namespace ATTACK
-{
-	enum NAME {NORMAL, FIRE, ICE, BLAST, END};
-}
 #endif // !__ENUM_H__

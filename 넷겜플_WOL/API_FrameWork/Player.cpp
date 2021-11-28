@@ -34,6 +34,16 @@ void CPlayer::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_RIGHT.bmp", L"Player_RIGHT");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_UP.bmp", L"Player_UP");
 
+
+	/// <summary>
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Normal_ATTACK.bmp", L"Normal_ATTACK");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/SKILL_FIREDRAGON.bmp", L"SKILL_FIREDRAGON");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/FIRE_PARTICLE.bmp", L"FIRE_PARTICLE");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Ice_ATTACK.bmp", L"Ice_ATTACK");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/ICE_BLAST.bmp", L"ICE_BLAST");
+
+
+	/// </summary>
 	m_eCurState = IDLE;
 	m_ePreState = IDLE;
 

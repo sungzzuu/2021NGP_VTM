@@ -66,16 +66,17 @@ void CDataMgr::SetAttackArr()
 	m_pAttackData.iSize = list_Attack.size();
 	m_pAttackData.pAttackInfo = new ATTACKINFO[m_pAttackData.iSize];
 
-	int cnt = 0;
+	int cnt = -1;
 	for (auto& attack : list_Attack)
 	{
-		m_pAttackData.pAttackInfo[cnt].iType = attack->m_eAttackName;
+		cnt++;
+		m_pAttackData.pAttackInfo[cnt].iType = attack->m_iAttackName;
 		m_pAttackData.pAttackInfo[cnt].tInfo = attack->Get_Info();
 		FRAME tFrame = attack->Get_Frame();
 		m_pAttackData.pAttackInfo[cnt].iFrameStart = tFrame.iFrameStart;
 		m_pAttackData.pAttackInfo[cnt].iFrameScene = tFrame.iFrameScene;
 		m_pAttackData.pAttackInfo[cnt].bCollision = false;
-		cnt++;
+		
 
 		//tAttackInfo.iType = attack->m_eAttackName;
 		//tAttackInfo.tInfo = attack->Get_Info();
@@ -98,8 +99,8 @@ void CDataMgr::RenderOthersAttack(HDC _DC)
 		for (int j = 0; j < m_pOthersAttackData[i].iSize; j++)
 		{
 			POINT size;
-			TCHAR*  pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size);
-			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"Normal_ATTACK");
+			TCHAR* pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size);
+			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
 
 			//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 			RECT tRect;

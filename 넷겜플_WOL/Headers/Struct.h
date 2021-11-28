@@ -92,11 +92,11 @@ typedef struct tagHpPotionRes
 
 typedef struct tagAttackInfo
 {
-	int				iType;			// 4개의 공격 중에서 뭔지
+	size_t			iType = 0;			// 4개의 공격 중에서 뭔지
 	INFO			tInfo;			// 좌표와 가로세로 크기
-	int				iFrameScene;	// 행
-	int				iFrameStart;	// 열
-	bool			bCollision;
+	int				iFrameScene = 0;	// 행
+	int				iFrameStart = 0;	// 열
+	bool			bCollision = 0;
 
 }ATTACKINFO;
 
