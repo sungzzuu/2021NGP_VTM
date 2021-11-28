@@ -58,6 +58,13 @@ typedef struct tagPlayerInfo
 	POS tPos = { 0 };
 	FRAME_INFO	tFrameInfo;
 
+	//INFO tPos;
+	int iHp;
+
+	TEAMNUM::TEAM team;
+	bool start;
+	bool button;
+	//FRAME tFrame;
 }PLAYER_INFO;
 
 typedef struct tagSkillInfo
@@ -72,6 +79,10 @@ typedef struct tagStoreData
 	//SKILL_INFO tFiresPos[4];
 	int iClientIndex = 0;
 
+	int iHp[4] = {};
+	TEAMNUM::TEAM team[4];
+	bool start;
+	bool button;
 }STORE_DATA;
 
 

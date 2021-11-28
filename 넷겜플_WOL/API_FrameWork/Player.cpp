@@ -29,6 +29,7 @@ CPlayer::~CPlayer()
 
 void CPlayer::Initialize()
 {
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"PLAYER_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_DOWN.bmp", L"Player_DOWN");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_LEFT.bmp", L"Player_LEFT");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_RIGHT.bmp", L"Player_RIGHT");
@@ -215,8 +216,8 @@ void CPlayer::Render(HDC _DC)
 				, 180, 182													
 				, RGB(255, 0, 255));
 		}
-		
 	}
+
 
 }
 

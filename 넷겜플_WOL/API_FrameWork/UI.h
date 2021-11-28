@@ -13,6 +13,5 @@ public:
 	virtual void Render(HDC _DC) override;
 	virtual void Release() override;
 
-
 };
 

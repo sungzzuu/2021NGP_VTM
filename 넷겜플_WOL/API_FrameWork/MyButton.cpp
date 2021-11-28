@@ -3,7 +3,7 @@
 #include "BmpMgr.h"
 #include "KeyMgr.h"
 #include "SceneMgr.h"
-
+#include "API_FrameWork.h"
 CMyButton::CMyButton()
 	
 {
@@ -19,7 +19,6 @@ void CMyButton::Initialize()
 {
 
 	m_eGroup = GROUPID::UI;
-
 }
 
 int CMyButton::Update()
@@ -46,6 +45,7 @@ void CMyButton::Late_Update()
 		if (!lstrcmp(L"MAIN_MENU", m_pFrameKey))
 		{
 			CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_STAGE);
+			hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 			return;
 		}
 		//else if (!lstrcmp(L"OPTION_MENU", m_pFrameKey))
@@ -59,8 +59,6 @@ void CMyButton::Late_Update()
 		//	return;
 		//}
 	}
-	
-
 }
 
 void CMyButton::Render(HDC _DC)

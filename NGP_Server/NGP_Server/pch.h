@@ -13,6 +13,7 @@
 #include <list>
 #include <map>
 
+#include <time.h>
 #include "Define.h"
 
 #include "Include.h"
