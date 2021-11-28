@@ -107,8 +107,8 @@ void CUI::Render(HDC _DC)
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersInfo[i].tPos.fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersInfo[i].tPos.fY - (m_tInfo.iCY >> 1));
-			//if (tStoreData.start == true)	//체력바 그리기
-			//{
+			if (tStoreData.start == true)	//체력바 그리기
+			{
 				GdiTransparentBlt(_DC
 					, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
 					, tStoreData.iHp[i] - 50, 10
@@ -116,7 +116,7 @@ void CUI::Render(HDC _DC)
 					, 0, 0
 					, 244, 32
 					, RGB(255, 0, 255));
-			//}
+			}
 			if (tStoreData.team[i] == TEAMNUM::TEAM1)
 			{
 				BeginPaint(g_hWnd, &ps);

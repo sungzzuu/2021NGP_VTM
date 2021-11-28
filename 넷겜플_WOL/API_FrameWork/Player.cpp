@@ -124,7 +124,7 @@ int CPlayer::Update()
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameStart = m_tFrame.iFrameStart;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameScene= m_tFrame.iFrameScene;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameKey = CDataMgr::Get_Instance()->SetFrameKey(m_pFrameKey);
-
+	CDataMgr::Get_Instance()->m_tPlayerInfo.iHp = m_iHp;
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
 	/// ////////////////////////////////////////////////
 

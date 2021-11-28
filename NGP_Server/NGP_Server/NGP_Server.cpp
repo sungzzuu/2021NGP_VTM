@@ -295,6 +295,10 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     // 받은 데이터 출력
     //buf[retval] = '\0';
     //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+    if (g_iClientCount == 4)    // 클라 4명이면 스타트
+    {
+        tPlayerInfo.start = true;
+    }
 
     g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
