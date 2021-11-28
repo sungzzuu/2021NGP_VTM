@@ -307,6 +307,11 @@ bool SendRecvPlayerInfo(SOCKET sock)
     else if (retval == 0)
         return FALSE;
 
+
+    //충돌된 좌표로 갱신
+
+
+
     return TRUE;
 }
 

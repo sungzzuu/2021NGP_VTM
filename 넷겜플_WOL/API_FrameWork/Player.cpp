@@ -167,6 +167,10 @@ void CPlayer::Late_Update()
 
 void CPlayer::Render(HDC _DC)
 {
+	//충돌 이후 좌표 갱신
+	//UpdateBeforeRender();
+	
+	
 	Update_Rect();
 
 	HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(m_pFrameKey);
@@ -205,6 +209,16 @@ void CPlayer::Render(HDC _DC)
 	}
 
 }
+
+
+void CPlayer::UpdateBeforeRender()
+{
+	STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+	m_tInfo.fX = tStoreData.tPlayersPos[tStoreData.iClientIndex].fX;
+	m_tInfo.fY = tStoreData.tPlayersPos[tStoreData.iClientIndex].fY;
+}
+
+
 
 void CPlayer::Release()
 {

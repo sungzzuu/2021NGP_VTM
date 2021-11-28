@@ -47,13 +47,14 @@ typedef struct tagFrame
 /// ///////////////////////////////////////////
 typedef struct tagPlayerInfo
 {
-	POS tPos;
+	POS tPos = { 0 };
 	//FRAME tFrame;
 }PLAYER_INFO;
 
 typedef struct tagSkillInfo
 {
 	std::vector<POS> vecFirePos;
+	bool isHit = false;
 	//FRAME tFrame;
 }SKILL_INFO;
 
