@@ -66,9 +66,11 @@ void CUI::Render(HDC _DC)
 		RGB(255, 0, 255));
 
 	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");		//체력바 틀
+
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+
 		if (i != tStoreData.iClientIndex && tStoreData.start == true)
 		{
 			RECT	tRect;
@@ -180,5 +182,3 @@ void CUI::Render(HDC _DC)
 void CUI::Release()
 {
 }
-
-

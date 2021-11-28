@@ -29,6 +29,7 @@ void err_display(char* msg);
 void err_quit(char* msg);
 int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
+DWORD WINAPI Start(LPVOID arg);
 bool RecvHpPotionInfo(SOCKET sock);
 
 // 서버 관련 변수
@@ -78,7 +79,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+	//hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
 
 	DWORD	dwTime1 = GetTickCount();
@@ -269,7 +270,6 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 
 
 		//모든 좌표 받기
-
 		retval = recvn(sock, (char*)&(CDataMgr::Get_Instance()->m_tStoreData), sizeof(STORE_DATA), 0);
 		if (retval == SOCKET_ERROR)
 		{
@@ -279,9 +279,8 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 		else if (retval == 0)
 			break;
 
-
 		//////////////////////////////////////////////////////////
-		
+
 		// 이곳에 각각의 함수 추가! 주고 받는 것
 		retval = RecvHpPotionInfo(sock);
 
