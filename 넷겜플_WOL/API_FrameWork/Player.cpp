@@ -116,7 +116,9 @@ int CPlayer::Update()
 
 
 	/// ////////////////////////////////////////////////
-	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos = m_tInfo;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fX = m_tInfo.fX;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fY = m_tInfo.fY;
+
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
 	/// ////////////////////////////////////////////////
 
