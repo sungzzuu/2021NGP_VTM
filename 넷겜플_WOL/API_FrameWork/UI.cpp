@@ -65,7 +65,7 @@ void CUI::Render(HDC _DC)
 		328, 80,
 		RGB(255, 0, 255));
 
-	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");
+	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");		//체력바 틀
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
@@ -82,6 +82,8 @@ void CUI::Render(HDC _DC)
 				, 0, 0
 				, 260, 41
 				, RGB(255, 0, 255));
+
+
 		}
 	}	// 체력바 틀 사이즈 맞춤
 
@@ -98,24 +100,26 @@ void CUI::Render(HDC _DC)
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
-		if (i != tStoreData.iClientIndex && tStoreData.start == true)
+		if (i != tStoreData.iClientIndex)
 		{
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersPos[i].fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersPos[i].fY - (m_tInfo.iCY >> 1));
-
-			GdiTransparentBlt(_DC
-				, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
-				, tStoreData.iHp[i] - 50, 10
-				, hMemDC
-				, 0,0
-				, 244, 32
-				, RGB(255, 0, 255));
+			if (tStoreData.start == true)	//체력바 그리기
+			{
+				GdiTransparentBlt(_DC
+					, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
+					, tStoreData.iHp[i] - 50, 10
+					, hMemDC
+					, 0, 0
+					, 244, 32
+					, RGB(255, 0, 255));
+			}
 			if (tStoreData.team[i] == TEAMNUM::TEAM1)
 			{
 				BeginPaint(g_hWnd, &ps);
 				SetTextColor(_DC, RGB(0, 0, 255));
-				wsprintf(lpOut, TEXT("%d"), i + 1);	//캐릭터 번호부여
+				wsprintf(lpOut, TEXT("%d"), i+ 1);	//캐릭터 번호부여
 				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
 				EndPaint(g_hWnd, &ps);
 			}

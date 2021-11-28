@@ -19,7 +19,7 @@ float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
 
 STORE_DATA g_tStoreData;
-PLAYER_INFO tPlayerInfo;
+
 bool isGameStart = false;
 
 
@@ -201,11 +201,9 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         //////////////////////////////////////////////////////
                 // 데이터 받기
         //x좌표
+        PLAYER_INFO tPlayerInfo;
 
-        if (g_iClientCount == 4)    // 클라 4명이면 스타트
-        {
-            tPlayerInfo.start = true;
-        }
+
 
         retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
         if (retval == SOCKET_ERROR)
@@ -220,12 +218,16 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         // 받은 데이터 출력
         buf[retval] = '\0';
         printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
-  
+        if (g_iClientCount == 4)    // 클라 4명이면 스타트
+        {
+            tPlayerInfo.start = true;
+        }
 
         g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
         g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
         g_tStoreData.iClientIndex = iCurIndex;
         g_tStoreData.start = tPlayerInfo.start;
+        //g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1;
         if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
         else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
 
