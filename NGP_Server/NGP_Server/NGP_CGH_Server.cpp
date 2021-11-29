@@ -1,5 +1,6 @@
 #include "pch.h"
 
+
 struct MyThread
 {
     int iIndex = 0;
@@ -10,10 +11,34 @@ HANDLE g_hClientEvent[4];
 int g_iWaitClientIndex[4];
 int g_iClientCount = 0; //접속한 클라 갯수
 
+CGameTimer m_GameTimer;
+
+// 체력약 관련
+HpPotionInfo g_tHpPotionInfo;
+float fPotionCreateTime = 0.f;
+LONG iHpPotionIndex;
+
 STORE_DATA g_tStoreData;
 bool isGameStart = false;
 
+
 DWORD WINAPI ProcessClient(LPVOID arg);
+DWORD WINAPI ServerMain(LPVOID arg);
+
+//플레이어 관련
+bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
+
+//충돌
+void CheckCollision(int iIndex);
+bool Check_Sphere(POS& tMePos, POS& tYouPos);
+bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
+
+// 체력약 관련
+void CreateHpPotion();
+bool SendRecv_HpPotionInfo(SOCKET sock);
+
+CRITICAL_SECTION g_csHpPotion;
+
 void err_quit(char* msg)
 {
     LPVOID lpMsgBuf;
@@ -62,6 +87,13 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 
 int main(int argc, char* argv[])
 {
+    InitializeCriticalSection(&g_csHpPotion);
+
+    srand(unsigned int(time(NULL)));
+
+    // ServerMain 스레드
+    CreateThread(NULL, 0, ServerMain, 0, 0, NULL);
+
     int retval;
 
     // 윈속 초기화
@@ -101,8 +133,6 @@ int main(int argc, char* argv[])
         g_iWaitClientIndex[i] = (i == 0) ? 3 : i - 1; // 3 0 1 2
     }
 
-    //구조체 초기화
-    memset(g_tStoreData.tPlayersPos, 0, sizeof(g_tStoreData.tPlayersPos));
 
     MyThread tThread;
     tThread.iIndex = 0;
@@ -135,6 +165,8 @@ int main(int argc, char* argv[])
     // closesocket()
     closesocket(listen_sock);
 
+    DeleteCriticalSection(&g_csHpPotion);
+
     // 윈속 종료
     WSACleanup();
     return 0;
@@ -163,7 +195,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     {
         if (!isGameStart)
         {
-            if(g_iClientCount < 4)
+            if (g_iClientCount < 4)
                 continue;
             else
                 isGameStart = true;
@@ -173,31 +205,21 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
-        // 데이터 받기
-        //x좌표
-        PLAYER_INFO tPlayerInfo;
-        retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
-        if (retval == SOCKET_ERROR)
+        //플레이어 데이터 받기
+        //////////////////////////////////////////////////////
+        if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
         {
-            err_display("recv()");
+            SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
-        else if (retval == 0)
-            break;
+        //////////////////////////////////////////////////////
 
 
-        // 받은 데이터 출력
-        buf[retval] = '\0';
-        printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
 
-        g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
-        g_tStoreData.iClientIndex = iCurIndex;
-
-        // 데이터 보내기
-        retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
-        if (retval == SOCKET_ERROR)
+        // 이스레드가 끝났다면 FALSE 리턴하므로
+        if (!SendRecv_HpPotionInfo(client_sock))
         {
-            err_display("send()");
+            SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
 
@@ -214,7 +236,6 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             {
                 g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //자신이 참조하고있던 인덱스로 바꿔줌
                 g_iWaitClientIndex[iCurIndex] = -1;
-                SetEvent(g_hClientEvent[g_iWaitClientIndex[i]]);
                 break;
             }
         }
@@ -231,3 +252,226 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     return 0;
 }
 
+// 서버 프로세스 구현
+DWORD WINAPI ServerMain(LPVOID arg)
+{
+    m_GameTimer.Reset();
+
+    while (true)
+    {
+        // 1. 체력약 시간재서 보내기
+        m_GameTimer.Tick(60.0f);
+        CreateHpPotion();
+
+    }
+}
+
+bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
+{
+    int retval, iCurIndex = iIndex;
+
+    PLAYER_INFO tPlayerInfo;
+    retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+
+    // 받은 데이터 출력
+    //buf[retval] = '\0';
+    //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+
+    g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+    g_tStoreData.iClientIndex = iCurIndex;
+
+    //충돌
+    CheckCollision(iCurIndex);
+
+
+    // 데이터 보내기
+    retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+void CreateHpPotion()
+{
+    fPotionCreateTime += m_GameTimer.GetTimeElapsed();
+
+    if (fPotionCreateTime >= POTION_TIME)
+    {
+        EnterCriticalSection(&g_csHpPotion);
+
+        fPotionCreateTime = 0.f;
+        g_tHpPotionInfo.thpPotionCreate.cnt = 0;
+        g_tHpPotionInfo.thpPotionCreate.bCreateOn = true;
+        g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
+        g_tHpPotionInfo.thpPotionCreate.pos.fX = (rand() % 1000) + 50; // 범위 재설정 필요
+        g_tHpPotionInfo.thpPotionCreate.pos.fY = (rand() % 500) + 50;  // 범위 재설정 필요
+        //printf("포션생성\n");
+        LeaveCriticalSection(&g_csHpPotion);
+
+    }
+}
+
+bool SendRecv_HpPotionInfo(SOCKET sock)
+{
+    int retval;
+
+    // 동기화 오류
+    // 여기서 g_tHpPotionInfo는 공유자원
+    // 서로 다른 스레드에서 동시에 접근하므로 객체가 변함
+    // Main스레드도 동기화를 해야함
+
+    EnterCriticalSection(&g_csHpPotion);
+
+    // 체력약 생성 정보 보내기
+    retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(HpPotionInfo), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        LeaveCriticalSection(&g_csHpPotion);
+
+        return FALSE;
+    }
+
+    // [체력약생성] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionCreate.bCreateOn)
+    {
+        g_tHpPotionInfo.thpPotionCreate.cnt++;
+
+        // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
+        if (g_tHpPotionInfo.thpPotionCreate.cnt == g_iClientCount)
+        {
+            ZeroMemory(&g_tHpPotionInfo.thpPotionCreate, sizeof(HpPotionCreate));
+        }
+    }
+
+    // [체력약삭제] 현재접속된 모든 클라에 보냈으면 변수 초기화
+    if (g_tHpPotionInfo.thpPotionDelete.bDeleteOn)
+    {
+        g_tHpPotionInfo.thpPotionDelete.cnt++;
+
+        // 접속한 클라에 개수만큼 체력약 정보 보냈으면 다시 0으로 리셋
+        if (g_tHpPotionInfo.thpPotionDelete.cnt == g_iClientCount)
+        {
+            ZeroMemory(&g_tHpPotionInfo.thpPotionDelete, sizeof(HpPotionDelete));
+        }
+    }
+    LeaveCriticalSection(&g_csHpPotion);
+
+
+    // 체력약 충돌 정보 받기
+    POTIONRES tHpPotionRes;
+
+    retval = recvn(sock, (char*)&tHpPotionRes, sizeof(POTIONRES), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    // 충돌일 경우 처리 - 맵에서 삭제 및 다른 클라에 알리기
+    if (tHpPotionRes.bCollision)
+    {
+        //printf("포션삭제\n");
+
+        // 접속 클라 1개인 경우
+        if (g_iClientCount == 1)
+            return TRUE;
+
+        g_tHpPotionInfo.thpPotionDelete.bDeleteOn = true;
+        g_tHpPotionInfo.thpPotionDelete.cnt = 1;
+        g_tHpPotionInfo.thpPotionDelete.index = tHpPotionRes.iIndex;
+
+
+    }
+
+    return TRUE;
+}
+
+
+
+
+
+void CheckCollision(int iIndex)
+{
+    int iCurIndex = iIndex;
+
+    float x = 0.f, y = 0.f;
+
+    for (int i = 0; i < 4/*g_iClientCount*/; ++i)
+    {
+        if (iCurIndex != i && g_tStoreData.tPlayersPos[iCurIndex].fX != 0.f)
+        {
+            //if (Check_Sphere(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i]))
+            //{
+            //    //충돌체 삭제?
+            //    printf("[%d] %d와 충돌\n", iCurIndex, i);
+            //}
+
+            //if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
+            //{
+            //    if (x > y)
+            //    {
+            //        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
+            //            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
+            //        else
+            //            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
+            //    }
+            //    else
+            //    {
+            //        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
+            //            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
+            //        else
+            //            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
+            //    }
+            //}
+        }
+    }
+}
+
+bool Check_Sphere(POS& tMePos, POS& tYouPos)
+{
+    //float fRadius = (float)((_Dst->Get_Info().iCX + _Src->Get_Info().iCY) >> 1);
+    float fRadius = 30;
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y)
+{
+    float fX = abs(tMePos.fX - tYouPos.fX);
+    float fY = abs(tMePos.fY - tYouPos.fY);
+
+    //float fCX = (float)((_Dst->Get_Info().iCX + _Src->Get_Info().iCX) >> 1);
+    //float fCY = (float)((_Dst->Get_Info().iCY + _Src->Get_Info().iCY) >> 1);
+
+    //플레이어 30,80
+    float fCX = 30.f;
+    float fCY = 80.f;
+
+    if (fCX > fX && fCY > fY)
+    {
+        *_x = fCX - fX;
+        *_y = fCY - fY;
+        return true;
+    }
+
+    return false;
+}

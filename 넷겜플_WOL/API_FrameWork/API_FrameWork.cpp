@@ -8,8 +8,8 @@
 #include "Potion.h"
 #include "ObjMgr.h"
 #include "MyButton.h"
-
 #include "DataMgr.h"
+#include <iostream>
 
 #define MAX_LOADSTRING 100
 
@@ -31,6 +31,7 @@ int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
 
 bool SendRecvPlayerInfo(SOCKET sock);
+
 bool SendRecvHpPotionInfo(SOCKET sock);
 bool SendRecvAttacks(SOCKET sock);
 
@@ -44,48 +45,52 @@ HANDLE hSocketEvent;
 
 char SERVERIP[512] = /*"172.30.1.46"*//*"192.168.0.134"*//*"192.168.120.31"*/ /*"172.20.10.9"*/ "127.0.0.1";
 
+
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionRes;
 void Add_Potion(HpPotionCreate);
 void Delete_Potion(HpPotionDelete hpPotionDelete);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
 {
-    srand(unsigned int(time(NULL)));
+	srand(unsigned int(time(NULL)));
 
-    // TODO: 여기에 코드를 입력합니다.
+	// TODO: 여기에 코드를 입력합니다.
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // 전역 문자열을 초기화합니다.
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_API_FRAMEWORK, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+	// 전역 문자열을 초기화합니다.
+	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadStringW(hInstance, IDC_API_FRAMEWORK, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
 
-    // 응용 프로그램 초기화를 수행합니다.
-    if (!InitInstance (hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
+	// 응용 프로그램 초기화를 수행합니다.
+	if (!InitInstance(hInstance, nCmdShow))
+	{
+		return FALSE;
+	}
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_API_FRAMEWORK));
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_API_FRAMEWORK));
 
-    MSG msg;
+	MSG msg;
 	msg.message = WM_NULL;
 
 	CMainGame mainGame;
 	mainGame.Initialize();
 
-    CMyButton button;
+	CMyButton button;
 	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
-	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+
+
+	//hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
+
 
 	DWORD	dwTime1 = GetTickCount();
 
-    while (WM_QUIT != msg.message)
-    {
+	while (WM_QUIT != msg.message)
+	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -94,26 +99,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		if (dwTime1 + 10  < GetTickCount())
 		{
-            WaitForSingleObject(hGameEvent, INFINITE);
-            
-            mainGame.Update();
+			WaitForSingleObject(hGameEvent, INFINITE);
+
+			mainGame.Update();
 			mainGame.Late_Update();
 
+			SetEvent(hSocketEvent);
 
 			// 서버 통신 진행
 
 			mainGame.Render();
 
-            SetEvent(hSocketEvent);
-
 			dwTime1 = GetTickCount();
 		}
 
-    }
+	}
 
-    CDataMgr::Get_Instance()->Destroy_Instance();
+	CDataMgr::Get_Instance()->Destroy_Instance();
 
-    return (int) msg.wParam;
+	return (int)msg.wParam;
 }
 
 
@@ -121,57 +125,57 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+	WNDCLASSEXW wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_API_FRAMEWORK));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = NULL;
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_API_FRAMEWORK));
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-    return RegisterClassExW(&wcex);
+	return RegisterClassExW(&wcex);
 }
 
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+	hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   RECT rc = { 0, 0, WINCX, WINCY };
+	RECT rc = { 0, 0, WINCX, WINCY };
 
-   AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0
-	   , rc.right - rc.left, rc.bottom - rc.top
-	   , nullptr, nullptr, hInstance, nullptr);
+	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0
+		, rc.right - rc.left, rc.bottom - rc.top
+		, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
 
-   g_hWnd = hWnd;
+	g_hWnd = hWnd;
 
-   return TRUE;
+	return TRUE;
 }
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
+	switch (message)
+	{
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
@@ -180,13 +184,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
 void err_display(char* msg)
@@ -267,10 +271,15 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     {
         WaitForSingleObject(hSocketEvent, INFINITE);
         
-        // 플레이어 정보
+        // 이곳에 각각의 함수 추가! 주고 받는 것
+        //////////////////////////////////////////////////////////
+
+      
         retval = SendRecvPlayerInfo(sock);
         if (retval == FALSE)
+            break;
 
+   
         // 체력약
         retval = SendRecvHpPotionInfo(sock);
         if (retval == FALSE)
@@ -281,6 +290,9 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         if (retval == FALSE)
             break;
 
+
+        //////////////////////////////////////////////////////////
+
         SetEvent(hGameEvent);
     }
 
@@ -290,20 +302,18 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 
     // 윈속 종료
     WSACleanup();
+
 }
 
 bool SendRecvPlayerInfo(SOCKET sock)
 {
     int retval;
-
     //자기 좌표 보내기
     PLAYER_INFO tPlayerInfo = CDataMgr::Get_Instance()->m_tPlayerInfo;
     retval = send(sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
     if (retval == SOCKET_ERROR)
-    {
         err_display("send()");
-        return FALSE;
-    }
+
 
     //모든 좌표 받기
 
@@ -315,50 +325,57 @@ bool SendRecvPlayerInfo(SOCKET sock)
     }
     else if (retval == 0)
         return FALSE;
+
+
+    //충돌된 좌표로 갱신
+    //Player Render 에서
+
+
+
+    return TRUE;
 }
+
 
 bool SendRecvHpPotionInfo(SOCKET sock)
 {
-    int retval;
+	int retval;
 
-    // 체력약 정보받기 생성&삭제
-    HpPotionInfo tHpPotionInfo;
-    retval = recvn(sock, (char*)&tHpPotionInfo, sizeof(HpPotionInfo), 0);
-    if (retval == SOCKET_ERROR)
-    {
-        err_display("recv()");
-        return FALSE;
-    }
-    else if (retval == 0)
-        return FALSE;
+	// 체력약 정보받기 생성&삭제
+	HpPotionInfo tHpPotionInfo;
+	retval = recvn(sock, (char*)&tHpPotionInfo, sizeof(HpPotionInfo), 0);
+	if (retval == SOCKET_ERROR)
+	{
+		err_display("recv()");
+		return FALSE;
+	}
+	else if (retval == 0)
+		return FALSE;
 
-    // 체력약 생성
-    if (tHpPotionInfo.thpPotionCreate.bCreateOn)
-    {
-        Add_Potion(tHpPotionInfo.thpPotionCreate);
-        printf("체력약 생성\n");
-    }
+	// 체력약 생성
+	if (tHpPotionInfo.thpPotionCreate.bCreateOn)
+	{
+		Add_Potion(tHpPotionInfo.thpPotionCreate);
+		printf("체력약 생성\n");
+	}
 
-    // 체력약 삭제
-    if (tHpPotionInfo.thpPotionDelete.bDeleteOn)
-    {
-        Delete_Potion(tHpPotionInfo.thpPotionDelete);
-        printf("체력약 삭제됨(다른 클라에 의해)\n");
-    }
+	// 체력약 삭제
+	if (tHpPotionInfo.thpPotionDelete.bDeleteOn)
+	{
+		Delete_Potion(tHpPotionInfo.thpPotionDelete);
+		printf("체력약 삭제됨(다른 클라에 의해)\n");
+	}
 
-    // 체력약 충돌 정보 보내기
-    retval = send(sock, (char*)&g_tHpPotionRes, sizeof(POTIONRES), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-    if (retval == SOCKET_ERROR)
-    {
-        err_display("send()");
-        return 0;
-    }
+	// 체력약 충돌 정보 보내기
+	retval = send(sock, (char*)&g_tHpPotionRes, sizeof(POTIONRES), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+	if (retval == SOCKET_ERROR)
+	{
+		err_display("send()");
+		return 0;
+	}
 
-    ZeroMemory(&g_tHpPotionRes, sizeof(POTIONRES));
+	ZeroMemory(&g_tHpPotionRes, sizeof(POTIONRES));
 
-    return TRUE;
-
-
+	return TRUE;
 }
 
 bool SendRecvAttacks(SOCKET sock)
@@ -377,69 +394,55 @@ bool SendRecvAttacks(SOCKET sock)
         return 0;
     }
 
-    if (iSize != 0)
+    if (iSize == 0)
+        return TRUE;
+
+    //if (iSize != 0)
+    //    printf("vec: %d\n", iSize);
+
+    // 공격 정보 보내기 - 2. 벡터
+    retval = send(sock, (char*)pAttackInfo, iSize * sizeof(ATTACKINFO), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+    if (retval == SOCKET_ERROR)
     {
-        retval = send(sock, (char*)pAttackInfo, iSize * sizeof(ATTACKINFO), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("send()");
-            return 0;
-        }
-        for (int i = 0; i < iSize; ++i)
-        {
-            printf("vec.front(): %d\n", pAttackInfo[i].iType);
-        }
-        printf("\n");
+        err_display("send()");
+        return 0;
     }
+    printf("vec.front(): %d\n", pAttackInfo[0].iType);
 
-  
+   
 
-    for (int i = 0; i < 3; i++)
-    {
-        iSize = 0;
-        // 공격 정보 받기 - 1. 배열의 크기
-        retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("recv()");
-            return FALSE;
-        }
-        else if (retval == 0)
-            return FALSE;
+    //for (int i = 0; i < 3; i++)
+    //{
+    //    // 공격 정보 받기 - 1. 배열의 크기
+    //    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    else if (retval == 0)
+    //        return FALSE;
 
-        CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
+    //    CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
 
-        if (iSize == 0)
-            continue;
+    //    if (iSize == 0)
+    //        continue;
 
-        // 공격 정보 받기 - 2. 배열
-        if(CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo != nullptr)
-            delete[] CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo;
-        CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo = new ATTACKINFO[iSize];
+    //    // 공격 정보 받기 - 2. 배열
+    //    retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    //    if (retval == SOCKET_ERROR)
+    //    {
+    //        err_display("recv()");
+    //        return FALSE;
+    //    }
+    //    else if (retval == 0)
+    //        return FALSE;
 
-        retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("recv()");
-            return FALSE;
-        }
-        else if (retval == 0)
-            return FALSE;
+    //    printf("other_vec.front(): %d\n", CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[0].iType);
 
-        for (int j = 0; j < iSize; ++j)
-        {
-            printf("other_vec.front(): %d\n", 
-                CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
-        }
-
-    }
+    //}
 
     return TRUE;
-}
-
-DWORD WINAPI Start(LPVOID arg)
-{
-    return 0;
 }
 
 void Add_Potion(HpPotionCreate hpPotionCreate)
@@ -452,6 +455,6 @@ void Add_Potion(HpPotionCreate hpPotionCreate)
 
 void Delete_Potion(HpPotionDelete hpPotionDelete)
 {
-    // index 일치하는 체력약 찾아서 삭제하기
-    CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
+	// index 일치하는 체력약 찾아서 삭제하기
+	CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
 }

@@ -2,6 +2,7 @@
 #include "UI.h"
 #include "ScrollMgr.h"
 #include "BmpMgr.h"
+
 #include "DataMgr.h"
 
 CUI::CUI()
@@ -20,6 +21,7 @@ void CUI::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"UI_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_MANABAR.bmp", L"UI_MANABAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_BAR.bmp", L"UI_BAR");
+
 
 	m_tInfo.iCX = 120;
 	m_tInfo.iCY = 60;
@@ -63,7 +65,7 @@ void CUI::Render(HDC _DC)
 		328, 80,
 		RGB(255, 0, 255));
 
-	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");		
+	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_BAR");		//체력바 틀
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -85,7 +87,7 @@ void CUI::Render(HDC _DC)
 
 
 		}
-	}
+	}	// 체력바 틀 사이즈 맞춤
 
 	//Rectangle(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 
@@ -97,24 +99,6 @@ void CUI::Render(HDC _DC)
 		244, 32,
 		RGB(255, 0, 255));
 
-
-	//HFONT myFont = CreateFont(20, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Arial");
-	//HFONT oldFont = (HFONT)SelectObject(_DC, myFont);
-	//TCHAR	szBuff[32] = L"";
-	//swprintf_s(szBuff, L"%d / 150", m_pTarget->Get_Hp());
-	//SetBkMode(_DC, 1); //투명
-	//SetTextColor(_DC, RGB(0, 255, 0));
-	//TextOut(_DC, m_tRect.left + iScrollX + 75, m_tRect.top + iScrollY + 10, szBuff, lstrlen(szBuff));
-	//DeleteObject(myFont);
-
-	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_MANABAR");
-	GdiTransparentBlt(_DC, m_tRect.left + iScrollX + 45, m_tRect.top + iScrollY + 38,
-		m_pTarget->Get_Mana(), 12,  //x 마나 120
-		hMemDC,
-		0, 0,
-		192, 16,
-		RGB(255, 0, 255));
-
 	for (int i = 0; i < 4; ++i)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
@@ -123,7 +107,7 @@ void CUI::Render(HDC _DC)
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersInfo[i].tPos.fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersInfo[i].tPos.fY - (m_tInfo.iCY >> 1));
-			if (tStoreData.start == true)	
+			if (tStoreData.start == true)	//체력바 그리기
 			{
 				GdiTransparentBlt(_DC
 					, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
@@ -137,7 +121,7 @@ void CUI::Render(HDC _DC)
 			{
 				BeginPaint(g_hWnd, &ps);
 				SetTextColor(_DC, RGB(0, 0, 255));
-				wsprintf(lpOut, TEXT("%d"), i + 1);	
+				wsprintf(lpOut, TEXT("%d"), i+ 1);	//캐릭터 번호부여
 				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
 				EndPaint(g_hWnd, &ps);
 			}
@@ -145,7 +129,7 @@ void CUI::Render(HDC _DC)
 			{
 				BeginPaint(g_hWnd, &ps);
 				SetTextColor(_DC, RGB(255, 0, 0));
-				wsprintf(lpOut, TEXT("%d"), i + 1);	
+				wsprintf(lpOut, TEXT("%d"), i + 1);	//캐릭터 번호부여
 				TextOut(_DC, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 60, lpOut, lstrlen(lpOut));
 				EndPaint(g_hWnd, &ps);
 			}
@@ -174,12 +158,27 @@ void CUI::Render(HDC _DC)
 				EndPaint(g_hWnd, &ps);
 			}
 		}
-	}	
+	}	// 최대 체력 150 (현재체력 - 50)
 
+
+	//HFONT myFont = CreateFont(20, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Arial");
+	//HFONT oldFont = (HFONT)SelectObject(_DC, myFont);
+	//TCHAR	szBuff[32] = L"";
+	//swprintf_s(szBuff, L"%d / 150", m_pTarget->Get_Hp());
+	//SetBkMode(_DC, 1); //투명
+	//SetTextColor(_DC, RGB(0, 255, 0));
+	//TextOut(_DC, m_tRect.left + iScrollX + 75, m_tRect.top + iScrollY + 10, szBuff, lstrlen(szBuff));
+	//DeleteObject(myFont);
+
+	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_MANABAR");
+	GdiTransparentBlt(_DC, m_tRect.left + iScrollX + 45, m_tRect.top + iScrollY + 38,
+		m_pTarget->Get_Mana(), 12,  //x 마나 120
+		hMemDC,
+		0, 0,
+		192, 16,
+		RGB(255, 0, 255));
 }
 
 void CUI::Release()
 {
 }
-
-

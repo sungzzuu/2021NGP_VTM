@@ -1,10 +1,10 @@
 ﻿#include "pch.h"
-
+#include <iostream>
 
 struct MyThread
 {
-    int iIndex = 0;
-    SOCKET sock = 0;
+	int iIndex = 0;
+	SOCKET sock = 0;
 };
 
 HANDLE g_hClientEvent[4];
@@ -19,6 +19,7 @@ float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
 
 STORE_DATA g_tStoreData;
+
 bool isGameStart = false;
 
 // 공격 관련
@@ -26,6 +27,10 @@ AttackData g_pAttackData[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
+
+//플레이어 관련
+bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
+
 
 // 체력약 관련
 void CreateHpPotion();
@@ -36,45 +41,45 @@ CRITICAL_SECTION g_csHpPotion;
 
 void err_quit(char* msg)
 {
-    LPVOID lpMsgBuf;
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, WSAGetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf, 0, NULL);
-    MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
-    LocalFree(lpMsgBuf);
-    exit(1);
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
 }
 void err_display(char* msg)
 {
-    LPVOID lpMsgBuf;
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, WSAGetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf, 0, NULL);
-    printf("[%s] %s", msg, (char*)lpMsgBuf);
-    LocalFree(lpMsgBuf);
+	LPVOID lpMsgBuf;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
+	printf("[%s] %s", msg, (char*)lpMsgBuf);
+	LocalFree(lpMsgBuf);
 }
 int recvn(SOCKET s, char* buf, int len, int flags)
 {
-    int received;
-    char* ptr = buf;
-    int left = len;
+	int received;
+	char* ptr = buf;
+	int left = len;
 
-    while (left > 0)
-    {
-        received = recv(s, ptr, left, flags);
-        if (received == SOCKET_ERROR)
-            return SOCKET_ERROR;
-        else if (received == 0)
-            break;
-        left -= received;
-        ptr += received;
-    }
+	while (left > 0)
+	{
+		received = recv(s, ptr, left, flags);
+		if (received == SOCKET_ERROR)
+			return SOCKET_ERROR;
+		else if (received == 0)
+			break;
+		left -= received;
+		ptr += received;
+	}
 
-    return (len - left);
+	return (len - left);
 }
 
 //////////////
@@ -203,35 +208,16 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
-
+        //플레이어 데이터 받기
         //////////////////////////////////////////////////////
-                // 데이터 받기
-        // x좌표, 프레임정보
-        PLAYER_INFO tPlayerInfo;
-        retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
-        if (retval == SOCKET_ERROR)
+        if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
         {
-            err_display("recv()");
+            SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
-        else if (retval == 0)
-            break;
+        //////////////////////////////////////////////////////
 
 
-        // 받은 데이터 출력
-        buf[retval] = '\0';
-        //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
-
-        g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
-        g_tStoreData.iClientIndex = iCurIndex;
-
-        // 데이터 보내기
-        retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("send()");
-            break;
-        }
 
         // 체력약
         if (!SendRecv_HpPotionInfo(client_sock))
@@ -274,20 +260,65 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
     return 0;
+
 }
 
 // 서버 프로세스 구현
 DWORD WINAPI ServerMain(LPVOID arg)
 {
-    m_GameTimer.Reset();
+	m_GameTimer.Reset();
 
-    while (true)
+	while (true)
+	{
+		// 1. 체력약 시간재서 보내기
+		m_GameTimer.Tick(60.0f);
+		CreateHpPotion();
+
+	}
+}
+
+bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
+{
+    int retval,iCurIndex = iIndex;
+
+    PLAYER_INFO tPlayerInfo;
+    retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+    if (retval == SOCKET_ERROR)
     {
-        // 1. 체력약 시간재서 보내기
-        m_GameTimer.Tick(60.0f);
-        CreateHpPotion();
-        
+        err_display("recv()");
+        return FALSE;
     }
+    else if (retval == 0)
+        return FALSE;
+
+
+    // 받은 데이터 출력
+    //buf[retval] = '\0';
+    //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+    if (g_iClientCount == 4)    // 클라 4명이면 스타트
+    {
+        tPlayerInfo.start = true;
+    }
+
+    g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
+    g_tStoreData.iClientIndex = iCurIndex;
+
+    g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
+    g_tStoreData.start = tPlayerInfo.start;
+    if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
+    else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
+
+
+
+    // 데이터 보내기
+    retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 void CreateHpPotion()
@@ -302,12 +333,13 @@ void CreateHpPotion()
         g_tHpPotionInfo.thpPotionCreate.cnt = 0;
         g_tHpPotionInfo.thpPotionCreate.bCreateOn = true;
         g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
-        g_tHpPotionInfo.thpPotionCreate.pos.x = (rand() % 1000) + 50; // 범위 재설정 필요
-        g_tHpPotionInfo.thpPotionCreate.pos.y = (rand() % 500) + 50;  // 범위 재설정 필요
+        g_tHpPotionInfo.thpPotionCreate.pos.fX = (rand() % 1000) + 50; // 범위 재설정 필요
+        g_tHpPotionInfo.thpPotionCreate.pos.fY = (rand() % 500) + 50;  // 범위 재설정 필요
         //printf("포션생성\n");
         LeaveCriticalSection(&g_csHpPotion);
 
     }
+
 }
 
 bool SendRecv_HpPotionInfo(SOCKET sock)
@@ -454,4 +486,5 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     //}
 
     return TRUE;
+
 }
