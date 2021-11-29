@@ -438,52 +438,57 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     //if(iSize != 0)
     //    printf("vec: %d\n", iSize);
 
-    if (iSize == 0)
-        return TRUE;
-
-    // 동적배열 초기화
-    delete[] g_pAttackData[clientIndex].pAttackInfo;
     g_pAttackData[clientIndex].iSize = iSize;
-    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
-    // 공격 정보 받기 - 2. 벡터
-    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    if (retval == SOCKET_ERROR)
+    if (iSize != 0)
     {
-        err_display("recv()");
-        return FALSE;
+        // 동적배열 초기화
+        delete[] g_pAttackData[clientIndex].pAttackInfo;
+        g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
+
+        // 공격 정보 받기 - 2. 벡터
+        retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        else if (retval == 0)
+            return FALSE;
+        for (int i = 0; i < iSize; ++i)
+        {
+            printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
+        }
     }
-    else if (retval == 0)
-        return FALSE;
 
-    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
 
-  
-    //for (int i = 0; i < 4; i++)
-    //{
-    //    if (i == clientIndex)
-    //        continue;
 
-    //    // 공격 정보 보내기 - 1. 배열의 크기
-    //    retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //    iSize = g_pAttackData[i].iSize;
 
-    //    if (iSize == 0)
-    //        continue;
+    for (int i = 0; i < 4; i++)
+    {
+        if (i == clientIndex)
+            continue;
 
-    //    // 공격 정보 보내기 - 2. 배열
-    //    retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //}
+        // 공격 정보 보내기 - 1. 배열의 크기
+        retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        iSize = g_pAttackData[i].iSize;
+
+        if (iSize == 0)
+            continue;
+
+        // 공격 정보 보내기 - 2. 배열
+        retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+    }
 
     return TRUE;
 

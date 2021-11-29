@@ -104,11 +104,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			mainGame.Update();
 			mainGame.Late_Update();
 
-			SetEvent(hSocketEvent);
 
 			// 서버 통신 진행
 
 			mainGame.Render();
+
+			SetEvent(hSocketEvent);
+
 
 			dwTime1 = GetTickCount();
 		}
@@ -380,69 +382,78 @@ bool SendRecvHpPotionInfo(SOCKET sock)
 
 bool SendRecvAttacks(SOCKET sock)
 {
-    int retval;
+	int retval;
 
-    // 공격 정보 보내기 - 1. 벡터의 크기
-    CDataMgr::Get_Instance()->SetAttackArr();
-    ATTACKINFO* pAttackInfo = CDataMgr::Get_Instance()->m_pAttackData.pAttackInfo;
-    int iSize = CDataMgr::Get_Instance()->m_pAttackData.iSize;
+	// 공격 정보 보내기 - 1. 벡터의 크기
+	CDataMgr::Get_Instance()->SetAttackArr();
+	ATTACKINFO* pAttackInfo = CDataMgr::Get_Instance()->m_pAttackData.pAttackInfo;
+	int iSize = CDataMgr::Get_Instance()->m_pAttackData.iSize;
 
-    retval = send(sock, (char*)&iSize, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-    if (retval == SOCKET_ERROR)
-    {
-        err_display("send()");
-        return 0;
-    }
+	retval = send(sock, (char*)&iSize, sizeof(int), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+	if (retval == SOCKET_ERROR)
+	{
+		err_display("send()");
+		return 0;
+	}
 
-    if (iSize == 0)
-        return TRUE;
+	if (iSize != 0)
+	{
+		retval = send(sock, (char*)pAttackInfo, iSize * sizeof(ATTACKINFO), 0); // 길이가 고정된 값이 아닌 가변인자인 len
+		if (retval == SOCKET_ERROR)
+		{
+			err_display("send()");
+			return 0;
+		}
+		for (int i = 0; i < iSize; ++i)
+		{
+			printf("vec.front(): %d\n", pAttackInfo[i].iType);
+		}
+		printf("\n");
+	}
 
-    //if (iSize != 0)
-    //    printf("vec: %d\n", iSize);
 
-    // 공격 정보 보내기 - 2. 벡터
-    retval = send(sock, (char*)pAttackInfo, iSize * sizeof(ATTACKINFO), 0); // 길이가 고정된 값이 아닌 가변인자인 len
-    if (retval == SOCKET_ERROR)
-    {
-        err_display("send()");
-        return 0;
-    }
-    printf("vec.front(): %d\n", pAttackInfo[0].iType);
 
-   
+	for (int i = 0; i < 3; i++)
+	{
+		iSize = 0;
+		// 공격 정보 받기 - 1. 배열의 크기
+		retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+		if (retval == SOCKET_ERROR)
+		{
+			err_display("recv()");
+			return FALSE;
+		}
+		else if (retval == 0)
+			return FALSE;
 
-    //for (int i = 0; i < 3; i++)
-    //{
-    //    // 공격 정보 받기 - 1. 배열의 크기
-    //    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //    else if (retval == 0)
-    //        return FALSE;
+		CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
 
-    //    CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize = iSize;
+		if (iSize == 0)
+			continue;
 
-    //    if (iSize == 0)
-    //        continue;
+		// 공격 정보 받기 - 2. 배열
+		if (CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo != nullptr)
+			delete[] CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo;
+		CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo = new ATTACKINFO[iSize];
 
-    //    // 공격 정보 받기 - 2. 배열
-    //    retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    //    if (retval == SOCKET_ERROR)
-    //    {
-    //        err_display("recv()");
-    //        return FALSE;
-    //    }
-    //    else if (retval == 0)
-    //        return FALSE;
+		retval = recvn(sock, (char*)CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+		if (retval == SOCKET_ERROR)
+		{
+			err_display("recv()");
+			return FALSE;
+		}
+		else if (retval == 0)
+			return FALSE;
 
-    //    printf("other_vec.front(): %d\n", CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[0].iType);
+		for (int j = 0; j < iSize; ++j)
+		{
+			printf("other_vec.front(): %d\n",
+				CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
+		}
 
-    //}
+	}
 
-    return TRUE;
+	return TRUE;
 }
 
 void Add_Potion(HpPotionCreate hpPotionCreate)
