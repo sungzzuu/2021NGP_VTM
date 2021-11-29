@@ -100,7 +100,7 @@ void CDataMgr::RenderOthersAttack(HDC _DC)
 		{
 			POINT size;
 			TCHAR* pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size);
-			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
+			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"Normal_ATACK");
 
 			//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 			RECT tRect;
