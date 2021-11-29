@@ -99,49 +99,62 @@ void CDataMgr::RenderOthersAttack(HDC _DC)
 		for (int j = 0; j < m_pOthersAttackData[i].iSize; j++)
 		{
 			POINT size;
-			TCHAR* pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size);
-			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"Normal_ATACK");
+			POINT imageSize;
+			UINT transparentColor;
+
+			TCHAR* pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size, imageSize, transparentColor);
+			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
 
 			//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);
 			RECT tRect;
 			INFO tInfo = m_pOthersAttackData[i].pAttackInfo[j].tInfo;
 			tRect.left = (LONG)(tInfo.fX - (tInfo.iCX >> 1));
 			tRect.top = (LONG)(tInfo.fY - (tInfo.iCY >> 1));
-			tRect.right = (LONG)(tInfo.fX + (tInfo.iCX >> 1));
-			tRect.bottom = (LONG)(tInfo.fY + (tInfo.iCY >> 1));
 
 			GdiTransparentBlt(_DC
 				, tRect.left, tRect.top
-				, CHAR_CX, CHAR_CY
+				, imageSize.x, imageSize.y
 				, hMemDC
 				, m_pOthersAttackData[i].pAttackInfo[j].iFrameStart * size.x, m_pOthersAttackData[i].pAttackInfo[j].iFrameScene * size.y	//시작좌표
 				, size.x, size.y													//길이
-				, RGB(255, 0, 255));
+				, transparentColor);
 		}
 		
 	}
 	
 }
 
-TCHAR* CDataMgr::GetFrameKey_Attack(int iType, POINT& pt)
+TCHAR* CDataMgr::GetFrameKey_Attack(int iType, POINT& pt, POINT& imSize, UINT& tpColor)
 {
 	switch (iType)
 	{
 	case 0:
 		pt.x = 200;
 		pt.y = 200;
+		imSize.x = 100;
+		imSize.y = 100;
+		tpColor = RGB(255, 0, 255);
 		return L"Normal_ATTACK";
 	case 1:
 		pt.x = 180;
 		pt.y = 180;
+		imSize.x = 70;
+		imSize.y = 70;
+		tpColor = RGB(255, 255, 255);
 		return L"SKILL_FIREDRAGON";
 	case 2:
 		pt.x = 200;
 		pt.y = 200;
+		imSize.x = 100;
+		imSize.y = 100;
+		tpColor = RGB(200, 230, 250);
 		return L"Ice_ATTACK";
 	case 3:
 		pt.x = 200;
 		pt.y = 250;
+		imSize.x = 100;
+		imSize.y = 100;
+		tpColor = RGB(255, 0, 255);
 		return L"ICE_BLAST";
 	default:
 		break;
