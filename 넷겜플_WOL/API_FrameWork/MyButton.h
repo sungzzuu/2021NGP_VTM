@@ -17,6 +17,10 @@ public:
 	virtual void Render(HDC _DC) override;
 	virtual void Release() override;
 
+	const bool Get_Start() { return m_bStart; }
+
+private:
+	bool m_bStart;
 };
 
 

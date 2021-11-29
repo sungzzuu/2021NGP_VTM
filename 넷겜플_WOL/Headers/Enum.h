@@ -18,4 +18,13 @@ namespace GROUPID
 	enum ID { BACKGROUND, OBJECT, EFFECT, UI, END };
 }
 
+namespace ATTACK
+{
+	enum NAME { NORMAL, FIRE, ICE, BLAST, END };
+}
+namespace TEAMNUM
+{
+	enum TEAM { NONE, TEAM1, TEAM2 };
+}
+
 #endif // !__ENUM_H__

@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
+#include <vector>
+#include <list>
+#include <map>
+
+#include <time.h>
+
 #include "Define.h"
 
 #include "Include.h"

@@ -29,6 +29,7 @@ CPlayer::~CPlayer()
 
 void CPlayer::Initialize()
 {
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"PLAYER_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_DOWN.bmp", L"Player_DOWN");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_LEFT.bmp", L"Player_LEFT");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Player_RIGHT.bmp", L"Player_RIGHT");
@@ -126,7 +127,9 @@ int CPlayer::Update()
 
 
 	/// ////////////////////////////////////////////////
-	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos = m_tInfo;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fX = m_tInfo.fX;
+	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fY = m_tInfo.fY;
+
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameStart = m_tFrame.iFrameStart;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameScene= m_tFrame.iFrameScene;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameKey = CDataMgr::Get_Instance()->SetFrameKey(m_pFrameKey);

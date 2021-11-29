@@ -7,9 +7,9 @@
 #include "MainGame.h"
 #include "Potion.h"
 #include "ObjMgr.h"
+#include "MyButton.h"
 
 #include "DataMgr.h"
-
 
 #define MAX_LOADSTRING 100
 
@@ -29,8 +29,12 @@ void err_display(char* msg);
 void err_quit(char* msg);
 int recvn(SOCKET s, char* buf, int len, int flags);
 DWORD WINAPI ServerProcess(LPVOID arg);
+
+bool SendRecvPlayerInfo(SOCKET sock);
 bool SendRecvHpPotionInfo(SOCKET sock);
 bool SendRecvAttacks(SOCKET sock);
+
+DWORD WINAPI Start(LPVOID arg);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
@@ -74,6 +78,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	CMainGame mainGame;
 	mainGame.Initialize();
 
+    CMyButton button;
 	// 서버 전송 부분 생성. 이벤트 생성해서 클라 Late_Update()까지 끝나면 send 하도록
 	hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 
@@ -262,23 +267,9 @@ DWORD WINAPI ServerProcess(LPVOID arg)
     {
         WaitForSingleObject(hSocketEvent, INFINITE);
         
-        //자기 좌표 보내기
-        PLAYER_INFO tPlayerInfo = CDataMgr::Get_Instance()->m_tPlayerInfo;
-        retval = send(sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
-        if (retval == SOCKET_ERROR)
-            err_display("send()");
-
-
-        //모든 좌표 받기
-
-        retval = recvn(sock, (char*)&(CDataMgr::Get_Instance()->m_tStoreData), sizeof(STORE_DATA), 0);
-        if (retval == SOCKET_ERROR)
-        {
-            err_display("recv()");
-            break;
-        }
-        else if (retval == 0)
-            break;
+        // 플레이어 정보
+        retval = SendRecvPlayerInfo(sock);
+        if (retval == FALSE)
 
         // 체력약
         retval = SendRecvHpPotionInfo(sock);
@@ -299,6 +290,31 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 
     // 윈속 종료
     WSACleanup();
+}
+
+bool SendRecvPlayerInfo(SOCKET sock)
+{
+    int retval;
+
+    //자기 좌표 보내기
+    PLAYER_INFO tPlayerInfo = CDataMgr::Get_Instance()->m_tPlayerInfo;
+    retval = send(sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+
+    //모든 좌표 받기
+
+    retval = recvn(sock, (char*)&(CDataMgr::Get_Instance()->m_tStoreData), sizeof(STORE_DATA), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
 }
 
 bool SendRecvHpPotionInfo(SOCKET sock)
@@ -421,10 +437,15 @@ bool SendRecvAttacks(SOCKET sock)
     return TRUE;
 }
 
+DWORD WINAPI Start(LPVOID arg)
+{
+    return 0;
+}
+
 void Add_Potion(HpPotionCreate hpPotionCreate)
 {
     CObj* pObj1 = CAbstractFactory<CPotion>::Create();
-    pObj1->Set_Pos(hpPotionCreate.pos.x, hpPotionCreate.pos.y);
+    pObj1->Set_Pos(hpPotionCreate.pos.fX, hpPotionCreate.pos.fY);
     dynamic_cast<CPotion*>(pObj1)->SetIndex(hpPotionCreate.index);
     CObjMgr::Get_Instance()->Add_Object(OBJID::GOLD, pObj1);
 }

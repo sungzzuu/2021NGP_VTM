@@ -10,6 +10,13 @@ typedef struct tagInfo
 	int		iCY;
 }INFO;
 
+
+typedef struct taPos
+{
+	float	fX;
+	float	fY;
+}POS;
+
 typedef struct tagLinePos
 {
 	tagLinePos() { ZeroMemory(this, sizeof(tagLinePos)); }
@@ -49,16 +56,35 @@ typedef struct tagFrameInfo
 
 typedef struct tagPlayerInfo
 {
-	INFO		tPos;
+	POS tPos = { 0 };
 	FRAME_INFO	tFrameInfo;
 
+	//INFO tPos;
+	int iHp;
+
+	TEAMNUM::TEAM team;
+	bool start;
+	bool button;
+	//FRAME tFrame;
+
 }PLAYER_INFO;
+
+typedef struct tagSkillInfo
+{
+	std::vector<POS> vecFirePos;
+	bool isHit = false;
+}SKILL_INFO;
 
 typedef struct tagStoreData
 {
 	PLAYER_INFO tPlayersInfo[4] = {0};
+	//SKILL_INFO tFiresPos[4];
 	int iClientIndex = 0;
 
+	int iHp[4] = {};
+	TEAMNUM::TEAM team[4];
+	bool start;
+	bool button;
 }STORE_DATA;
 
 //////////////////////////////////// 서버
@@ -67,7 +93,7 @@ struct HpPotionCreate
 	int		cnt; // 몇개의 클라에 보냈는지
 	int		index; // 체력약 리스트 중 몇번째?
 	bool	bCreateOn;
-	POINT	pos;
+	POS		pos;
 };
 
 struct HpPotionDelete

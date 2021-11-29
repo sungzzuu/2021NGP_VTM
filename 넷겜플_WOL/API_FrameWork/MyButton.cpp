@@ -35,10 +35,10 @@ void CMyButton::Late_Update()
 
 	if (400 > pt.y)
 		m_pFrameKey = L"MAIN_MENU";
-	else if(500 < pt.y)
-		m_pFrameKey = L"QUIT_MENU";
-	else
-		m_pFrameKey = L"OPTION_MENU";
+	//else if(500 < pt.y)
+	//	m_pFrameKey = L"QUIT_MENU";
+	//else
+	//	m_pFrameKey = L"OPTION_MENU";
 
 
 	if (CKeyMgr::Get_Instance()->Key_Down(VK_LBUTTON))
@@ -46,6 +46,7 @@ void CMyButton::Late_Update()
 		if (!lstrcmp(L"MAIN_MENU", m_pFrameKey))
 		{
 			CSceneMgr::Get_Instance()->Scene_Change(CSceneMgr::SCENE_STAGE);
+			hServerProcess = CreateThread(NULL, 0, ServerProcess, NULL, 0, NULL);
 			return;
 		}
 		//else if (!lstrcmp(L"OPTION_MENU", m_pFrameKey))
