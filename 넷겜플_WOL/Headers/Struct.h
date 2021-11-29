@@ -47,9 +47,9 @@ typedef struct tagFrame
 /// ///////////////////////////////////////////
 typedef struct tagFrameInfo
 {
-	int		iFrameStart; // ¿­
-	int		iFrameScene; // Çà
-	int		iFrameKey;// ÇÁ·¹ÀÓÅ° (PLAYER_DOWN)			
+	int		iFrameStart; // ï¿½ï¿½
+	int		iFrameScene; // ï¿½ï¿½
+	int		iFrameKey;// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å° (PLAYER_DOWN)			
 
 }FRAME_INFO;
 
@@ -87,19 +87,19 @@ typedef struct tagStoreData
 
 
 
-//////////////////////////////////// ¼­¹ö
+//////////////////////////////////// ï¿½ï¿½ï¿½ï¿½
 struct HpPotionCreate
 {
-	int		cnt; // ¸î°³ÀÇ Å¬¶ó¿¡ º¸³Â´ÂÁö
-	int		index; // Ã¼·Â¾à ¸®½ºÆ® Áß ¸î¹øÂ°?
+	int		cnt; // ï¿½î°³ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½
+	int		index; // Ã¼ï¿½Â¾ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ ï¿½ï¿½ï¿½Â°?
 	bool	bCreateOn;
 	POS	pos;
 };
 
 struct HpPotionDelete
 {
-	int		cnt; // ¸î°³ÀÇ Å¬¶ó¿¡ º¸³Â´ÂÁö
-	int		index; // Ã¼·Â¾à ¸®½ºÆ® Áß ¸î¹øÂ°?
+	int		cnt; // ï¿½î°³ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½
+	int		index; // Ã¼ï¿½Â¾ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ ï¿½ï¿½ï¿½Â°?
 	bool	bDeleteOn;
 };
 
@@ -118,17 +118,17 @@ typedef struct tagHpPotionRes
 
 typedef struct tagAttackInfo
 {
-	int				iType;			// 4°³ÀÇ °ø°Ý Áß¿¡¼­ ¹ºÁö
-	INFO			tInfo;			// ÁÂÇ¥¿Í °¡·Î¼¼·Î Å©±â
-	int				iFrameScene;	// Çà
-	int				iFrameStart;	// ¿­
-	bool			bCollision;
+	size_t			iType = 0;			// 4ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	INFO			tInfo;			// ï¿½ï¿½Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½ Å©ï¿½ï¿½
+	int				iFrameScene = 0;	// ï¿½ï¿½
+	int				iFrameStart = 0;	// ï¿½ï¿½
+	bool			bCollision = 0;
 
 }ATTACKINFO;
 
 struct AttackData
 {
-	int iSize;
+	int iSize = 0;
 	ATTACKINFO* pAttackInfo = nullptr;
 };
 
