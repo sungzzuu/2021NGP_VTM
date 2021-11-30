@@ -20,6 +20,7 @@ public:
 
 private:
 	void	UpdateBeforeRender();
+	void	CheckHit();
 
 
 public:

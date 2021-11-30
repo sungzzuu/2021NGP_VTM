@@ -25,7 +25,7 @@ public:
 	CObj* Get_Player() const { return m_listObj[OBJID::PLAYER].front(); }
 	CObj* Get_Target(CObj* _pDst, OBJID::ID _eID);
 	bool Get_AllDead(OBJID::ID _eID);
-	list<CObj*> Get_list(OBJID::ID _eID) { return m_listObj[_eID]; }
+	list<CObj*>& Get_list(OBJID::ID _eID) { return m_listObj[_eID]; }
 
 	// 체력약 관련 함수
 public:

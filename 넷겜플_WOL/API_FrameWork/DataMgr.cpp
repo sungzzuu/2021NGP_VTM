@@ -91,8 +91,11 @@ void CDataMgr::SetAttackArr()
 
 void CDataMgr::RenderOthersAttack(HDC _DC)
 {
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
+		if (m_tStoreData.iClientIndex == i)
+			continue;
+
 		if (m_pOthersAttackData[i].iSize == 0)
 			continue;
 

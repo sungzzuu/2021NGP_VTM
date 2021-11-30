@@ -326,6 +326,9 @@
     <ClCompile Include="DataMgr.cpp">
       <Filter>소스 파일\98.Manager\08.DataMgr</Filter>
     </ClCompile>
+    <ClCompile Include="API_FrameWork_CGH.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="API_FrameWork.rc">

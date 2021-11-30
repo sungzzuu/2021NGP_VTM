@@ -43,9 +43,12 @@ CRITICAL_SECTION g_csHpPotion;
 
 //충돌
 void CheckCollision(int iIndex);
+bool Check_Sphere_PlayerSkill(POS& tMePos, INFO& tYouPos);
+bool Check_Sphere_SkillPlayer(INFO& tMePos, POS& tYouPos);
+
 bool Check_Sphere(POS& tMePos, POS& tYouPos);
 bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
-
+bool g_isHit[4] = { false };
 
 
 
@@ -243,6 +246,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             break;
         }
 
+
         SetEvent(g_hClientEvent[iCurIndex]);
     }
 
@@ -318,6 +322,9 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
     else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
 
+    g_tStoreData.tPlayersInfo[iCurIndex].isHit = g_isHit[iCurIndex];
+    if (g_isHit[iCurIndex])
+        g_isHit[iCurIndex] = false;
 
 
     // 데이터 보내기
@@ -448,31 +455,40 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     //if(iSize != 0)
     //    printf("vec: %d\n", iSize);
 
-    if (iSize == 0)
-        return TRUE;
-
-    // 동적배열 초기화
-    delete[] g_pAttackData[clientIndex].pAttackInfo;
     g_pAttackData[clientIndex].iSize = iSize;
-    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
-    // 공격 정보 받기 - 2. 벡터
-    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    if (retval == SOCKET_ERROR)
+    if (iSize != 0)
     {
-        err_display("recv()");
-        return FALSE;
-    }
-    else if (retval == 0)
-        return FALSE;
+        // 동적배열 초기화
+        delete[] g_pAttackData[clientIndex].pAttackInfo;
+        g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
-    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
+        // 공격 정보 받기 - 2. 벡터
+        retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        else if (retval == 0)
+            return FALSE;
+
+        //for (int i = 0; i < iSize; ++i)
+        //{
+        //    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
+        //}
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    //충돌체크
+    CheckCollision(clientIndex);
+    ////////////////////////////////////////////////////////////////////
 
 
     for (int i = 0; i < 4; i++)
     {
-        if (i == clientIndex)
-            continue;
+        //if (i == clientIndex)
+        //    continue;
 
         // 공격 정보 보내기 - 1. 배열의 크기
         retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
@@ -500,7 +516,6 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 }
 
 
-
 void CheckCollision(int iIndex)
 {
     int iCurIndex = iIndex;
@@ -512,15 +527,17 @@ void CheckCollision(int iIndex)
 		if (iCurIndex == i)
 			continue;
 
-		if (g_pAttackData[iCurIndex].pAttackInfo && g_pAttackData[i].pAttackInfo)
+        //죽었으면 충돌x
+        if (g_tStoreData.tPlayersInfo[i].isDead)
+            continue;
+
+		for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //본인의 스킬 갯수
 		{
-			for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //본인의 스킬 갯수
+			if (Check_Sphere_SkillPlayer(g_pAttackData[iCurIndex].pAttackInfo[j].tInfo, g_tStoreData.tPlayersInfo[i].tPos))
 			{
-					if (Check_Sphere(g_pAttackData[j].pAttackInfo->tInfo, g_pAttackData[k].pAttackInfo->tInfo))
-					{
-                        //충돌체 삭제?
-                            //printf("[%d] %d와 충돌\n", iCurIndex, i);
-					}
+                //std::cout << i << "클라 충돌\n";
+				g_pAttackData[iCurIndex].pAttackInfo[j].bCollision = true; 
+                g_isHit[i] = true;
 			}
 		}
 
@@ -548,6 +565,28 @@ bool Check_Sphere(INFO& tMePos, INFO& tYouPos)
 {
     float fRadius = (float)((tMePos.iCX + tYouPos.iCY) >> 1);
     //float fRadius = 30;
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Sphere_PlayerSkill(POS& tMePos, INFO& tYouPos)
+{
+    float fRadius = (float)((30 + tYouPos.iCY) >> 1);
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Sphere_SkillPlayer(INFO& tMePos, POS& tYouPos)
+{
+    float fRadius = (float)((tMePos.iCY + 80) >> 1);
 
     float fX = tMePos.fX - tYouPos.fX;
     float fY = tMePos.fY - tYouPos.fY;

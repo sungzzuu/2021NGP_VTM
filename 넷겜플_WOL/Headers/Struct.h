@@ -58,21 +58,23 @@ typedef struct tagPlayerInfo
 	POS tPos = { 0 };
 	FRAME_INFO	tFrameInfo;
 
-	//INFO tPos;
 	int iHp;
 
 	TEAMNUM::TEAM team;
 	bool start;
 	bool button;
-	//FRAME tFrame;
+
+	bool	isHit = false; //충돌 판정
+	bool	isDead = false; //죽었다 살아나면 false로 변환 필요 / True일때 충돌x
+
 
 }PLAYER_INFO;
 
-typedef struct tagSkillInfo
-{
-	std::vector<POS> vecFirePos;
-	bool isHit = false;
-}SKILL_INFO;
+//typedef struct tagSkillInfo
+//{
+//	std::vector<POS> vecFirePos;
+//	bool isHit = false;
+//}SKILL_INFO;
 
 typedef struct tagStoreData
 {

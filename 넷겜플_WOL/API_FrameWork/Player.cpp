@@ -134,6 +134,8 @@ int CPlayer::Update()
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameKey = CDataMgr::Get_Instance()->SetFrameKey(m_pFrameKey);
 	CDataMgr::Get_Instance()->m_tPlayerInfo.iHp = m_iHp;
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
+
+	CheckHit();
 	/// ////////////////////////////////////////////////
 
 
@@ -235,6 +237,27 @@ void CPlayer::UpdateBeforeRender()
 	STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
 	m_tInfo.fX = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fX;
 	m_tInfo.fY = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fY;
+}
+
+void CPlayer::CheckHit()
+{
+	if (CDataMgr::Get_Instance()->m_tPlayerInfo.isDead)
+		return;
+
+	int iIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
+	if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
+	{
+		m_iHp -= 5; //임의로
+		if (m_iHp < 0)
+		{
+			m_iHp = 0;
+			//CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isDead = true;
+			CDataMgr::Get_Instance()->m_tPlayerInfo.isDead = true;
+
+		}
+		//std::cout << iIndex << "-hp:" << m_iHp << std::endl;
+		CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit = false;
+	}
 }
 
 

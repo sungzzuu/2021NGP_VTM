@@ -36,7 +36,7 @@ public:
 	PLAYER_INFO			m_tPlayerInfo;
 	STORE_DATA			m_tStoreData;
 	AttackData			m_pAttackData;
-	AttackData			m_pOthersAttackData[3];
+	AttackData			m_pOthersAttackData[4];
 
 
 };
