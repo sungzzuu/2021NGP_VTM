@@ -218,7 +218,6 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         //////////////////////////////////////////////////////
 
 
-
         // 체력약
         if (!SendRecv_HpPotionInfo(client_sock))
         {
@@ -268,14 +267,14 @@ DWORD WINAPI ServerMain(LPVOID arg)
 {
 	m_GameTimer.Reset();
 
-	while (true)
-	{
-		// 1. 체력약 시간재서 보내기
-		m_GameTimer.Tick(60.0f);
-		CreateHpPotion();
-
-	}
+    while (true)
+    {
+        // 1. 체력약 시간재서 보내기
+        m_GameTimer.Tick(60.0f);
+        CreateHpPotion();
+    }
 }
+
 
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
 {

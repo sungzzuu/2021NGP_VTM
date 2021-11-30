@@ -3,7 +3,7 @@
 #include "BmpMgr.h"
 #include "KeyMgr.h"
 #include "SceneMgr.h"
-
+#include "API_FrameWork.h"
 CMyButton::CMyButton()
 	
 {
@@ -19,7 +19,6 @@ void CMyButton::Initialize()
 {
 
 	m_eGroup = GROUPID::UI;
-
 }
 
 int CMyButton::Update()
@@ -60,8 +59,6 @@ void CMyButton::Late_Update()
 		//	return;
 		//}
 	}
-	
-
 }
 
 void CMyButton::Render(HDC _DC)

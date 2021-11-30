@@ -104,7 +104,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			mainGame.Update();
 			mainGame.Late_Update();
 
-
 			// 서버 통신 진행
 
 			mainGame.Render();
@@ -310,15 +309,14 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 bool SendRecvPlayerInfo(SOCKET sock)
 {
     int retval;
+
     //자기 좌표 보내기
     PLAYER_INFO tPlayerInfo = CDataMgr::Get_Instance()->m_tPlayerInfo;
     retval = send(sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
     if (retval == SOCKET_ERROR)
         err_display("send()");
 
-
     //모든 좌표 받기
-
     retval = recvn(sock, (char*)&(CDataMgr::Get_Instance()->m_tStoreData), sizeof(STORE_DATA), 0);
     if (retval == SOCKET_ERROR)
     {
@@ -336,7 +334,6 @@ bool SendRecvPlayerInfo(SOCKET sock)
 
     return TRUE;
 }
-
 
 bool SendRecvHpPotionInfo(SOCKET sock)
 {

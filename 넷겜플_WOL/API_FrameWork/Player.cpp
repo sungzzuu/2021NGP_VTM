@@ -129,7 +129,6 @@ int CPlayer::Update()
 	/// ////////////////////////////////////////////////
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fX = m_tInfo.fX;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tPos.fY = m_tInfo.fY;
-
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameStart = m_tFrame.iFrameStart;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameScene= m_tFrame.iFrameScene;
 	CDataMgr::Get_Instance()->m_tPlayerInfo.tFrameInfo.iFrameKey = CDataMgr::Get_Instance()->SetFrameKey(m_pFrameKey);
@@ -182,6 +181,10 @@ void CPlayer::Late_Update()
 
 void CPlayer::Render(HDC _DC)
 {
+	//충돌 이후 좌표 갱신
+	//UpdateBeforeRender();
+	
+	
 	Update_Rect();
 
 	HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(m_pFrameKey);
@@ -221,10 +224,20 @@ void CPlayer::Render(HDC _DC)
 				, 180, 182													
 				, RGB(255, 0, 255));
 		}
-		
 	}
 
+
 }
+
+
+void CPlayer::UpdateBeforeRender()
+{
+	STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
+	m_tInfo.fX = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fX;
+	m_tInfo.fY = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fY;
+}
+
+
 
 void CPlayer::Release()
 {

@@ -9,7 +9,7 @@ class CMyButton : public CObj
 public:
 	CMyButton();
 	virtual ~CMyButton();
-
+	
 public:
 	virtual void Initialize() override;
 	virtual int Update() override;
@@ -21,6 +21,7 @@ public:
 
 private:
 	bool m_bStart;
+
 };
 
 
