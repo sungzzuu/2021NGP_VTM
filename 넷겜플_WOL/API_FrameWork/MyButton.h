@@ -16,10 +16,12 @@ public:
 	virtual void Late_Update() override;
 	virtual void Render(HDC _DC) override;
 	virtual void Release() override;
-	
-	const bool Get_Start() { return b_Start; }
+
+	const bool Get_Start() { return m_bStart; }
+
 private:
-	bool b_Start;
+	bool m_bStart;
+
 };
 
 

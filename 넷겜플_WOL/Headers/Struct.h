@@ -10,12 +10,12 @@ typedef struct tagInfo
 	int		iCY;
 }INFO;
 
+
 typedef struct taPos
 {
 	float	fX;
 	float	fY;
 }POS;
-
 
 typedef struct tagLinePos
 {
@@ -65,6 +65,7 @@ typedef struct tagPlayerInfo
 	bool start;
 	bool button;
 	//FRAME tFrame;
+
 }PLAYER_INFO;
 
 typedef struct tagSkillInfo
@@ -93,7 +94,7 @@ struct HpPotionCreate
 	int		cnt; // ��� Ŭ�� ���´���
 	int		index; // ü�¾� ����Ʈ �� ���°?
 	bool	bCreateOn;
-	POS	pos;
+	POS		pos;
 };
 
 struct HpPotionDelete

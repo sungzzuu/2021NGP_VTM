@@ -218,7 +218,6 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         //////////////////////////////////////////////////////
 
 
-
         // 체력약
         if (!SendRecv_HpPotionInfo(client_sock))
         {
@@ -268,14 +267,14 @@ DWORD WINAPI ServerMain(LPVOID arg)
 {
 	m_GameTimer.Reset();
 
-	while (true)
-	{
-		// 1. 체력약 시간재서 보내기
-		m_GameTimer.Tick(60.0f);
-		CreateHpPotion();
-
-	}
+    while (true)
+    {
+        // 1. 체력약 시간재서 보내기
+        m_GameTimer.Tick(60.0f);
+        CreateHpPotion();
+    }
 }
+
 
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
 {
@@ -438,27 +437,32 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     //if(iSize != 0)
     //    printf("vec: %d\n", iSize);
 
-    if (iSize == 0)
-        return TRUE;
-
-    // 동적배열 초기화
-    delete[] g_pAttackData[clientIndex].pAttackInfo;
     g_pAttackData[clientIndex].iSize = iSize;
-    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
-    // 공격 정보 받기 - 2. 벡터
-    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
-    if (retval == SOCKET_ERROR)
+    if (iSize != 0)
     {
-        err_display("recv()");
-        return FALSE;
+        // 동적배열 초기화
+        delete[] g_pAttackData[clientIndex].pAttackInfo;
+        g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
+
+        // 공격 정보 받기 - 2. 벡터
+        retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        else if (retval == 0)
+            return FALSE;
+        for (int i = 0; i < iSize; ++i)
+        {
+            printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
+        }
     }
-    else if (retval == 0)
-        return FALSE;
 
-    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
 
-  
+
+
     for (int i = 0; i < 4; i++)
     {
         if (i == clientIndex)
