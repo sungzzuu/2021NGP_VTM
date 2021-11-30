@@ -1,5 +1,5 @@
 #include "pch.h"
-
+#include <iostream>
 
 struct MyThread
 {
@@ -19,8 +19,11 @@ float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
 
 STORE_DATA g_tStoreData;
+
 bool isGameStart = false;
 
+// 공격 관련
+AttackData g_pAttackData[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
@@ -28,16 +31,23 @@ DWORD WINAPI ServerMain(LPVOID arg);
 //플레이어 관련
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
 
+
+// 체력약 관련
+void CreateHpPotion();
+bool SendRecv_HpPotionInfo(SOCKET sock);
+bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
+
+CRITICAL_SECTION g_csHpPotion;
+
+
+
 //충돌
 void CheckCollision(int iIndex);
 bool Check_Sphere(POS& tMePos, POS& tYouPos);
 bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
 
-// 체력약 관련
-void CreateHpPotion();
-bool SendRecv_HpPotionInfo(SOCKET sock);
 
-CRITICAL_SECTION g_csHpPotion;
+
 
 void err_quit(char* msg)
 {
@@ -147,6 +157,9 @@ int main(int argc, char* argv[])
             break;
         }
 
+        int nagleopt = TRUE;
+        setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&nagleopt, sizeof(nagleopt));
+
         tThread.sock = client_sock;
         ++g_iClientCount;
         ++tThread.iIndex;
@@ -216,8 +229,15 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
 
 
-        // 이스레드가 끝났다면 FALSE 리턴하므로
+        // 체력약
         if (!SendRecv_HpPotionInfo(client_sock))
+        {
+            SetEvent(g_hClientEvent[iCurIndex]);
+            break;
+        }
+
+        // 공격
+        if (!SendRecv_AttackInfo(client_sock, iCurIndex))
         {
             SetEvent(g_hClientEvent[iCurIndex]);
             break;
@@ -250,6 +270,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
     return 0;
+
 }
 
 // 서버 프로세스 구현
@@ -284,12 +305,19 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     // 받은 데이터 출력
     //buf[retval] = '\0';
     //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
+    if (g_iClientCount == 4)    // 클라 4명이면 스타트
+    {
+        tPlayerInfo.start = true;
+    }
 
-    g_tStoreData.tPlayersPos[iCurIndex] = tPlayerInfo.tPos;
+    g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
 
-    //충돌
-    CheckCollision(iCurIndex);
+    g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
+    g_tStoreData.start = tPlayerInfo.start;
+    if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
+    else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
+
 
 
     // 데이터 보내기
@@ -321,6 +349,7 @@ void CreateHpPotion()
         LeaveCriticalSection(&g_csHpPotion);
 
     }
+
 }
 
 bool SendRecv_HpPotionInfo(SOCKET sock)
@@ -401,7 +430,74 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
     return TRUE;
 }
 
+bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
+{
+    int retval;
 
+    // 공격 정보 받기 - 1. 벡터의 크기
+    int iSize = 0;
+    retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    //if(iSize != 0)
+    //    printf("vec: %d\n", iSize);
+
+    if (iSize == 0)
+        return TRUE;
+
+    // 동적배열 초기화
+    delete[] g_pAttackData[clientIndex].pAttackInfo;
+    g_pAttackData[clientIndex].iSize = iSize;
+    g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
+
+    // 공격 정보 받기 - 2. 벡터
+    retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("recv()");
+        return FALSE;
+    }
+    else if (retval == 0)
+        return FALSE;
+
+    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[0].iType);
+
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (i == clientIndex)
+            continue;
+
+        // 공격 정보 보내기 - 1. 배열의 크기
+        retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+        iSize = g_pAttackData[i].iSize;
+
+        if (iSize == 0)
+            continue;
+
+        // 공격 정보 보내기 - 2. 배열
+        retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
+        if (retval == SOCKET_ERROR)
+        {
+            err_display("recv()");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+
+}
 
 
 
@@ -413,39 +509,45 @@ void CheckCollision(int iIndex)
 
     for (int i = 0; i < 4/*g_iClientCount*/; ++i)
     {
-        if (iCurIndex != i && g_tStoreData.tPlayersPos[iCurIndex].fX != 0.f)
-        {
-            //if (Check_Sphere(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i]))
-            //{
-            //    //충돌체 삭제?
-            //    printf("[%d] %d와 충돌\n", iCurIndex, i);
-            //}
+		if (iCurIndex == i)
+			continue;
 
-            //if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
-            //{
-            //    if (x > y)
-            //    {
-            //        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
-            //            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
-            //        else
-            //            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
-            //    }
-            //    else
-            //    {
-            //        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
-            //            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
-            //        else
-            //            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
-            //    }
-            //}
-        }
-    }
+		if (g_pAttackData[iCurIndex].pAttackInfo && g_pAttackData[i].pAttackInfo)
+		{
+			for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //본인의 스킬 갯수
+			{
+					if (Check_Sphere(g_pAttackData[j].pAttackInfo->tInfo, g_pAttackData[k].pAttackInfo->tInfo))
+					{
+                        //충돌체 삭제?
+                            //printf("[%d] %d와 충돌\n", iCurIndex, i);
+					}
+			}
+		}
+
+		//if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
+		//{
+		//    if (x > y)
+		//    {
+		//        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
+		//            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
+		//        else
+		//            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
+		//    }
+		//    else
+		//    {
+		//        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
+		//            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
+		//        else
+		//            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
+		//    }
+		//}
+	}
 }
 
-bool Check_Sphere(POS& tMePos, POS& tYouPos)
+bool Check_Sphere(INFO& tMePos, INFO& tYouPos)
 {
-    //float fRadius = (float)((_Dst->Get_Info().iCX + _Src->Get_Info().iCY) >> 1);
-    float fRadius = 30;
+    float fRadius = (float)((tMePos.iCX + tYouPos.iCY) >> 1);
+    //float fRadius = 30;
 
     float fX = tMePos.fX - tYouPos.fX;
     float fY = tMePos.fY - tYouPos.fY;
@@ -454,7 +556,7 @@ bool Check_Sphere(POS& tMePos, POS& tYouPos)
     return fRadius > fDis;
 }
 
-bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y)
+bool Check_Rect(INFO& tMePos, INFO& tYouPos, float* _x, float* _y)
 {
     float fX = abs(tMePos.fX - tYouPos.fX);
     float fY = abs(tMePos.fY - tYouPos.fY);
