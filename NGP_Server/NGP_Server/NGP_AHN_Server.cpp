@@ -275,7 +275,7 @@ DWORD WINAPI ServerMain(LPVOID arg)
     while (true)
     {
         // 1. 체력약 시간재서 보내기
-        if (g_iClientCount == 4)    // 클라 4명이면 스타트
+        if (g_iClientCount == 4)    // 클라 4명이면 스타트      // 바뀐부분
         {
             m_GameTimer.Tick(60.0f);
             CreateHpPotion();
@@ -307,6 +307,7 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
     g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
+    // 바뀐부분 start 없어짐
     if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
     else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
 
@@ -329,6 +330,7 @@ void CreateHpPotion()
 
     if (fPotionCreateTime >= POTION_TIME)
     {
+        g_tStoreData.start = true;      //바뀐부분
         EnterCriticalSection(&g_csHpPotion);
 
         fPotionCreateTime = 0.f;
@@ -337,10 +339,9 @@ void CreateHpPotion()
         g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
         g_tHpPotionInfo.thpPotionCreate.pos.fX = (rand() % 1000) + 50; // 범위 재설정 필요
         g_tHpPotionInfo.thpPotionCreate.pos.fY = (rand() % 500) + 50;  // 범위 재설정 필요
-        g_tStoreData.start = true;
+
         //printf("포션생성\n");
         LeaveCriticalSection(&g_csHpPotion);
-
     }
 
 }
