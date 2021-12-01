@@ -63,7 +63,6 @@ typedef struct tagPlayerInfo
 
 	TEAMNUM::TEAM team;
 	bool start;
-	bool button;
 	//FRAME tFrame;
 
 }PLAYER_INFO;
@@ -83,10 +82,7 @@ typedef struct tagStoreData
 	int iHp[4] = {};
 	TEAMNUM::TEAM team[4];
 	bool start;
-	bool button;
 }STORE_DATA;
-
-
 
 //////////////////////////////////// ����
 struct HpPotionCreate

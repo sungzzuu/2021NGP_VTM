@@ -195,7 +195,10 @@
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="API_FrameWork.cpp" />
+    <ClCompile Include="AHN_FrameWork.cpp" />
+    <ClCompile Include="API_FrameWork.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="BlastAttack.cpp" />
     <ClCompile Include="BmpMgr.cpp" />
     <ClCompile Include="CollisionMgr.cpp" />
