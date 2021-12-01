@@ -66,7 +66,7 @@ typedef struct tagPlayerInfo
 
 	bool	isHit = false; //충돌 판정
 	bool	isDead = false; //죽었다 살아나면 false로 변환 필요 / True일때 충돌x
-
+	//FRAME tFrame;
 
 }PLAYER_INFO;
 
@@ -85,10 +85,7 @@ typedef struct tagStoreData
 	int iHp[4] = {};
 	TEAMNUM::TEAM team[4];
 	bool start;
-	bool button;
 }STORE_DATA;
-
-
 
 //////////////////////////////////// ����
 struct HpPotionCreate
