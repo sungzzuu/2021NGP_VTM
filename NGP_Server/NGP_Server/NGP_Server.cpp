@@ -39,6 +39,16 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
 
 CRITICAL_SECTION g_csHpPotion;
 
+//충돌
+void CheckCollision(int iIndex);
+bool Check_Sphere_PlayerSkill(POS& tMePos, INFO& tYouPos);
+bool Check_Sphere_SkillPlayer(INFO& tMePos, POS& tYouPos);
+
+bool Check_Sphere(POS& tMePos, POS& tYouPos);
+bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
+bool g_isHit[4] = { false };
+
+
 void err_quit(char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -307,7 +317,9 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
     else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
 
-
+    g_tStoreData.tPlayersInfo[iCurIndex].isHit = g_isHit[iCurIndex];
+    if (g_isHit[iCurIndex])
+        g_isHit[iCurIndex] = false;
 
     // 데이터 보내기
     retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
@@ -462,11 +474,15 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 
 
 
+    ////////////////////////////////////////////////////////////////////
+    //충돌체크
+    CheckCollision(clientIndex);
+    ////////////////////////////////////////////////////////////////////
 
     for (int i = 0; i < 4; i++)
     {
-        if (i == clientIndex)
-            continue;
+        //if (i == clientIndex)
+        //    continue;
 
         // 공격 정보 보내기 - 1. 배열의 크기
         retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
@@ -491,4 +507,106 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 
     return TRUE;
 
+}
+
+
+void CheckCollision(int iIndex)
+{
+    int iCurIndex = iIndex;
+
+    float x = 0.f, y = 0.f;
+
+    for (int i = 0; i < 4/*g_iClientCount*/; ++i)
+    {
+        if (iCurIndex == i)
+            continue;
+
+        //죽었으면 충돌x
+        if (g_tStoreData.tPlayersInfo[i].isDead)
+            continue;
+
+        for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //본인의 스킬 갯수
+        {
+            if (Check_Sphere_SkillPlayer(g_pAttackData[iCurIndex].pAttackInfo[j].tInfo, g_tStoreData.tPlayersInfo[i].tPos))
+            {
+                //std::cout << i << "클라 충돌\n";
+                g_pAttackData[iCurIndex].pAttackInfo[j].bCollision = true;
+                g_isHit[i] = true;
+            }
+        }
+
+        //if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
+        //{
+        //    if (x > y)
+        //    {
+        //        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
+        //            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
+        //        else
+        //            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
+        //    }
+        //    else
+        //    {
+        //        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
+        //            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
+        //        else
+        //            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
+        //    }
+        //}
+    }
+}
+
+bool Check_Sphere(INFO& tMePos, INFO& tYouPos)
+{
+    float fRadius = (float)((tMePos.iCX + tYouPos.iCY) >> 1);
+    //float fRadius = 30;
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Sphere_PlayerSkill(POS& tMePos, INFO& tYouPos)
+{
+    float fRadius = (float)((30 + tYouPos.iCY) >> 1);
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Sphere_SkillPlayer(INFO& tMePos, POS& tYouPos)
+{
+    float fRadius = (float)((tMePos.iCY + 80) >> 1);
+
+    float fX = tMePos.fX - tYouPos.fX;
+    float fY = tMePos.fY - tYouPos.fY;
+    float fDis = sqrtf(fX * fX + fY * fY);
+
+    return fRadius > fDis;
+}
+
+bool Check_Rect(INFO& tMePos, INFO& tYouPos, float* _x, float* _y)
+{
+    float fX = abs(tMePos.fX - tYouPos.fX);
+    float fY = abs(tMePos.fY - tYouPos.fY);
+
+    //float fCX = (float)((_Dst->Get_Info().iCX + _Src->Get_Info().iCX) >> 1);
+    //float fCY = (float)((_Dst->Get_Info().iCY + _Src->Get_Info().iCY) >> 1);
+
+    //플레이어 30,80
+    float fCX = 30.f;
+    float fCY = 80.f;
+
+    if (fCX > fX && fCY > fY)
+    {
+        *_x = fCX - fX;
+        *_y = fCY - fY;
+        return true;
+    }
+
+    return false;
 }

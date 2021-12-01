@@ -401,16 +401,16 @@ bool SendRecvAttacks(SOCKET sock)
 			err_display("send()");
 			return 0;
 		}
-		for (int i = 0; i < iSize; ++i)
-		{
-			printf("vec.front(): %d\n", pAttackInfo[i].iType);
-		}
-		printf("\n");
+		//for (int i = 0; i < iSize; ++i)
+		//{
+		//	printf("vec.front(): %d\n", pAttackInfo[i].iType);
+		//}
+		//printf("\n");
 	}
 
 
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		iSize = 0;
 		// 공격 정보 받기 - 1. 배열의 크기
@@ -442,13 +442,34 @@ bool SendRecvAttacks(SOCKET sock)
 		else if (retval == 0)
 			return FALSE;
 
-		for (int j = 0; j < iSize; ++j)
+		//for (int j = 0; j < iSize; ++j)
+		//{
+		//	printf("other_vec.front(): %d\n",
+		//		CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
+		//}
+
+
+		//받고 자기꺼 돌면서 충돌된거 있으면 dead true
+		int iCurIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
+		if (i == iCurIndex)
 		{
-			printf("other_vec.front(): %d\n",
-				CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
+			for (int j = 0; j < CDataMgr::Get_Instance()->m_pOthersAttackData[i].iSize; ++j)
+			{
+				if (CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].bCollision)
+				{
+					auto& iter = CObjMgr::Get_Instance()->Get_list(OBJID::ATTACK).begin();
+
+					std::advance(iter, j);
+					(*iter)->Set_Dead();
+					//cout << "Skill Dead\n";
+				}
+			}
 		}
 
 	}
+
+
+	
 
 	return TRUE;
 }

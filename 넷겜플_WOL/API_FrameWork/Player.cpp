@@ -247,7 +247,7 @@ void CPlayer::CheckHit()
 	int iIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
 	if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
 	{
-		m_iHp -= 5; //임의로
+		m_iHp -= 1; //임의로
 		if (m_iHp < 0)
 		{
 			m_iHp = 0;
