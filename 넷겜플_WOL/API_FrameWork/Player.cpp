@@ -16,9 +16,9 @@
 #include "DataMgr.h"
 
 CPlayer::CPlayer()
-	: m_fPoSize(0.f)
+	//: m_fPoSize(0.f)
 {
-	ZeroMemory(&m_tPosin, sizeof(m_tPosin));
+	//ZeroMemory(&m_tPosin, sizeof(m_tPosin));
 }
 
 
@@ -55,9 +55,8 @@ void CPlayer::Initialize()
 	m_tFrame.dwFrameTime = GetTickCount();
 	m_pFrameKey = L"Player_DOWN";
 
-
-	m_tInfo.fX = 630.f;
-	m_tInfo.fY = 500.f;
+	m_tInfo.fX = 600.f;
+	m_tInfo.fY = 600.f;
 	//m_tInfo.fX = 3100.f;
 	//m_tInfo.fY = 600.f;
 
@@ -247,13 +246,16 @@ void CPlayer::Key_Check()
 {
 	Move();
 	Dash();
-	Hit();
-	Normal_Att();
-	Fire_Att();
-	Ice_Att();
-	Shield_Att();
-	Blast_Att();
-
+	//Normal_Att();
+	if (g_tPlayerInit.start == true)
+	{
+		Hit();
+		Normal_Att();
+		Fire_Att();
+		Ice_Att();
+		Shield_Att();
+		Blast_Att();
+	}
 
 	Update_Rect();
 }

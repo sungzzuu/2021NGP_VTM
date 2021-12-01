@@ -9,7 +9,7 @@
 #include "ObjMgr.h"
 #include "MyButton.h"
 #include "DataMgr.h"
-#include <iostream>
+
 
 #define MAX_LOADSTRING 100
 
@@ -35,6 +35,7 @@ bool SendRecvPlayerInfo(SOCKET sock);
 bool SendRecvHpPotionInfo(SOCKET sock);
 bool SendRecvAttacks(SOCKET sock);
 
+bool RecvPlayerInit(SOCKET sock);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
@@ -49,6 +50,8 @@ char SERVERIP[512] = /*"172.30.1.46"*//*"192.168.0.134"*//*"192.168.120.31"*/ /*
 POTIONRES g_tHpPotionRes;
 void Add_Potion(HpPotionCreate);
 void Delete_Potion(HpPotionDelete hpPotionDelete);
+
+PLAYER_INIT g_tPlayerInit;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -266,7 +269,7 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 	int nagleopt = TRUE;
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&nagleopt, sizeof(nagleopt));
 
-	bool init = true;
+
 
 	while (1)
 	{
@@ -275,25 +278,29 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 		// 이곳에 각각의 함수 추가! 주고 받는 것
 		//////////////////////////////////////////////////////////
 
-
-
-
-		retval = SendRecvPlayerInfo(sock);
+		retval = RecvPlayerInit(sock);
 		if (retval == FALSE)
 			break;
 
 
-		// 체력약
-		retval = SendRecvHpPotionInfo(sock);
-		if (retval == FALSE)
-			break;
+		if (g_tPlayerInit.start == true)
+		{
+			retval = SendRecvPlayerInfo(sock);
+			if (retval == FALSE)
+				break;
+		
+			// 체력약
+			retval = SendRecvHpPotionInfo(sock);
+			if (retval == FALSE)
+				break;
+		}
 
+		//g_tPlayerInit.start 조건문 안에 들어가면 멈춤
 		// 공격
 		retval = SendRecvAttacks(sock);
 		if (retval == FALSE)
 			break;
-
-
+		
 		//////////////////////////////////////////////////////////
 
 		SetEvent(hGameEvent);
@@ -405,7 +412,7 @@ bool SendRecvAttacks(SOCKET sock)
 		}
 		for (int i = 0; i < iSize; ++i)
 		{
-			printf("vec.front(): %d\n", pAttackInfo[i].iType);
+			//printf("vec.front(): %d\n", pAttackInfo[i].iType);
 		}
 		printf("\n");
 	}
@@ -446,8 +453,8 @@ bool SendRecvAttacks(SOCKET sock)
 
 		for (int j = 0; j < iSize; ++j)
 		{
-			printf("other_vec.front(): %d\n",
-				CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
+			//printf("other_vec.front(): %d\n",
+				//CDataMgr::Get_Instance()->m_pOthersAttackData[i].pAttackInfo[j].iType);
 		}
 
 	}
@@ -467,4 +474,24 @@ void Delete_Potion(HpPotionDelete hpPotionDelete)
 {
 	// index 일치하는 체력약 찾아서 삭제하기
 	CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
+}
+
+
+bool RecvPlayerInit(SOCKET sock)
+{
+	int retval;
+
+	retval = recvn(sock, (char*)&g_tPlayerInit , sizeof(PLAYER_INIT), 0);
+	if (retval == SOCKET_ERROR)
+	{
+		err_display("recv()");
+		return FALSE;
+	}
+	else if (retval == 0)
+		return FALSE;
+	
+	//buf[retval] = '\0';
+	//printf("(%f, %f)\n", g_tPlayerInit.tPos.fX, g_tPlayerInit.tPos.fY);
+	//std::cout<< CDataMgr::Get_Instance()->m_tStoreData.team[1] << std::endl;
+	//std::cout <<"2" <<g_tPlayerInit.tPos.fX << std::endl;
 }

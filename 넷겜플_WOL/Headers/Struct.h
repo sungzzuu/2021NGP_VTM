@@ -53,6 +53,14 @@ typedef struct tagFrameInfo
 
 }FRAME_INFO;
 
+typedef struct tagPlayerInit
+{
+	POS tPos = { 0 };
+	TEAMNUM::TEAM team[4];
+	bool start;
+	int iCount = 0;
+}PLAYER_INIT;
+
 typedef struct tagPlayerInfo
 {
 	POS tPos = { 0 };

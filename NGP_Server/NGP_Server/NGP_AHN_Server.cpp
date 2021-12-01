@@ -16,8 +16,10 @@ CGameTimer m_GameTimer;
 // 체력약 관련
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
+float fStartTime = 0.f;
 LONG iHpPotionIndex;
 
+PLAYER_INIT tPlayerInit;
 STORE_DATA g_tStoreData;
 
 bool isGameStart = false;
@@ -29,12 +31,15 @@ DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
 
 //플레이어 관련
+bool SendPlayerInit(SOCKET sock, int PlayerIndex);
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
 
 // 체력약 관련
 void CreateHpPotion();
 bool SendRecv_HpPotionInfo(SOCKET sock);
 bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
+
+void CountStart();
 
 CRITICAL_SECTION g_csHpPotion;
 
@@ -207,33 +212,44 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
+        // 시간 구조체 send recv, 배치, Key_Check()
 
 
+		if (!SendPlayerInit(client_sock, iCurIndex))
+		{
+			SetEvent(g_hClientEvent[iCurIndex]);
+			break;
+		}
 
-        //플레이어 데이터 받기
-        //////////////////////////////////////////////////////
-        if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
+        if (tPlayerInit.start == true)
         {
-            SetEvent(g_hClientEvent[iCurIndex]);
-            break;
-        }
-        //////////////////////////////////////////////////////
+            //플레이어 데이터 받기
+            //////////////////////////////////////////////////////
+            if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
+            {
+                SetEvent(g_hClientEvent[iCurIndex]);
+                break;
+            }
+            //////////////////////////////////////////////////////
 
 
-        // 체력약
-        if (!SendRecv_HpPotionInfo(client_sock))
-        {
-            SetEvent(g_hClientEvent[iCurIndex]);
-            break;
-        }
-
-        // 공격
-        if (!SendRecv_AttackInfo(client_sock, iCurIndex))
-        {
-            SetEvent(g_hClientEvent[iCurIndex]);
-            break;
+            // 체력약
+            if (!SendRecv_HpPotionInfo(client_sock))
+            {
+                SetEvent(g_hClientEvent[iCurIndex]);
+                break;
+            }
         }
 
+        //tPlayerInit.start 조건문 안에 들어가면 멈춤
+		// 공격
+		if (!SendRecv_AttackInfo(client_sock, iCurIndex))
+		{
+			SetEvent(g_hClientEvent[iCurIndex]);
+			break;
+		}
+
+ 
         SetEvent(g_hClientEvent[iCurIndex]);
     }
 
@@ -275,13 +291,15 @@ DWORD WINAPI ServerMain(LPVOID arg)
     while (true)
     {
         // 1. 체력약 시간재서 보내기
-        if (g_iClientCount == 4)    // 클라 4명이면 스타트      // 바뀐부분
-        {
-            m_GameTimer.Tick(60.0f);
-            CreateHpPotion();
-        }
+		if (g_iClientCount == 4)   // 클라 4명이면 스타트
+		{
+			m_GameTimer.Tick(60.0f);
+			if (!tPlayerInit.start)
+				CountStart();
+			CreateHpPotion();
+		}
 
-    }
+	}
 }
 
 
@@ -307,11 +325,6 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
     g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
-    // 바뀐부분 start 없어짐
-    if (iCurIndex == 1 || iCurIndex == 3) { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM1; }
-    else { g_tStoreData.team[iCurIndex] = TEAMNUM::TEAM2; }
-
-
 
     // 데이터 보내기
     retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
@@ -326,11 +339,11 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
 
 void CreateHpPotion()
 {
-    fPotionCreateTime += m_GameTimer.GetTimeElapsed();
+    fPotionCreateTime += m_GameTimer.GetTimeElapsed();  // 이전 프레임에서 현재 프레임까지 시간 
 
     if (fPotionCreateTime >= POTION_TIME)
     {
-        g_tStoreData.start = true;      //바뀐부분
+
         EnterCriticalSection(&g_csHpPotion);
 
         fPotionCreateTime = 0.f;
@@ -461,7 +474,7 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
             return FALSE;
         for (int i = 0; i < iSize; ++i)
         {
-           printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
+           //printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
         }
     }
 
@@ -497,3 +510,34 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
     return TRUE;
 
 }
+
+bool SendPlayerInit(SOCKET sock, int PlayerIndex)
+{
+    int retval;
+
+    tPlayerInit.iCount = (int)fStartTime;
+
+    if (PlayerIndex == 1 || PlayerIndex == 3) { tPlayerInit.team[PlayerIndex] = TEAMNUM::TEAM1; }
+    else { tPlayerInit.team[PlayerIndex] = TEAMNUM::TEAM2; }
+    retval = send(sock, (char*)&tPlayerInit, sizeof(PLAYER_INIT), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void CountStart()
+{
+    fStartTime += m_GameTimer.GetTimeElapsed();  // 이전 프레임에서 현재 프레임까지 시간 
+    std::cout << 6 - (int)fStartTime << std::endl;
+    if (fStartTime >= START_TIME)
+    {
+        tPlayerInit.start = true;
+    }
+}
+// 남은 시간 보여주기
+// 
+// 플레이어 좌표 세팅
+// 플레이어 대기중 -> 남은시간 -> 플레이어 배치(좌표)

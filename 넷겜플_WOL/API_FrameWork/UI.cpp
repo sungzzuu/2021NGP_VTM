@@ -71,7 +71,7 @@ void CUI::Render(HDC _DC)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
 
-		if (i != tStoreData.iClientIndex && tStoreData.start == true)
+		if (i != tStoreData.iClientIndex && g_tPlayerInit.start == true)
 		{
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersInfo[i].tPos.fX - (m_tInfo.iCX >> 1));
@@ -107,7 +107,7 @@ void CUI::Render(HDC _DC)
 			RECT	tRect;
 			tRect.left = (LONG)(tStoreData.tPlayersInfo[i].tPos.fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersInfo[i].tPos.fY - (m_tInfo.iCY >> 1));
-			if (tStoreData.start == true)	//체력바 그리기
+			if (g_tPlayerInit.start == true)	//체력바 그리기
 			{
 				GdiTransparentBlt(_DC
 					, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
@@ -117,7 +117,7 @@ void CUI::Render(HDC _DC)
 					, 244, 32
 					, RGB(255, 0, 255));
 			}
-			if (tStoreData.team[i] == TEAMNUM::TEAM1)
+			if (g_tPlayerInit.team[i] == TEAMNUM::TEAM1)
 			{
 				BeginPaint(g_hWnd, &ps);
 				SetTextColor(_DC, RGB(0, 0, 255));
@@ -141,7 +141,7 @@ void CUI::Render(HDC _DC)
 			tRect.left = (LONG)(tStoreData.tPlayersInfo[i].tPos.fX - (m_tInfo.iCX >> 1));
 			tRect.top = (LONG)(tStoreData.tPlayersInfo[i].tPos.fY - (m_tInfo.iCY >> 1));
 
-			if (tStoreData.team[i] == TEAMNUM::TEAM1)
+			if (g_tPlayerInit.team[i] == TEAMNUM::TEAM1)
 			{
 				BeginPaint(g_hWnd, &ps);
 				SetTextColor(_DC, RGB(0, 0, 255));
@@ -177,6 +177,24 @@ void CUI::Render(HDC _DC)
 		0, 0,
 		192, 16,
 		RGB(255, 0, 255));
+
+
+	if (g_tPlayerInit.iCount == 5)
+	{
+		BeginPaint(g_hWnd, &ps);
+		SetTextColor(_DC, RGB(255, 0, 0));
+		wsprintf(lpOut, TEXT("START!"));	// 카운트 다운
+		TextOut(_DC, 600, 100, lpOut, lstrlen(lpOut));
+		EndPaint(g_hWnd, &ps);
+	}
+	else
+	{
+		BeginPaint(g_hWnd, &ps);
+		SetTextColor(_DC, RGB(255, 0, 0));
+		wsprintf(lpOut, TEXT("%d"), 5 - g_tPlayerInit.iCount);	// 카운트 다운
+		TextOut(_DC, 600, 100, lpOut, lstrlen(lpOut));
+		EndPaint(g_hWnd, &ps);
+	}
 }
 
 void CUI::Release()
