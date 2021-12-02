@@ -177,6 +177,8 @@ void CUI::Render(HDC _DC)
 		0, 0,
 		192, 16,
 		RGB(255, 0, 255));
+
+
 }
 
 void CUI::Release()

@@ -26,5 +26,8 @@ namespace TEAMNUM
 {
 	enum TEAM { NONE, TEAM1, TEAM2 };
 }
-
+namespace ENDING
+{
+	enum END_TYPE { ING, WIN, LOSE, END };
+}
 #endif // !__ENUM_H__

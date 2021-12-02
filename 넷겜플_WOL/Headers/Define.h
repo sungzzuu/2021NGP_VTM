@@ -34,5 +34,5 @@
 #define SERVERPORT 9000
 
 #define MAP_EDGE 50
-
+#define	REVIVE_TIME 10000
 #endif // !__DEFINE_H__

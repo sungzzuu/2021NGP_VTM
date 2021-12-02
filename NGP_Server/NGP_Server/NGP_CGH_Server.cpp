@@ -50,6 +50,9 @@ bool Check_Sphere(POS& tMePos, POS& tYouPos);
 bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
 bool g_isHit[4] = { false };
 
+// 엔딩
+bool g_bEnding = false;
+void CheckEnding(int iCurIndex);
 
 
 void err_quit(char* msg)
@@ -313,9 +316,18 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     {
         tPlayerInfo.start = true;
     }
+    // 엔딩 변수 저장
+    ENDING::END_TYPE eEnding = ENDING::ING;
+    if (g_bEnding)
+    {
+        eEnding = g_tStoreData.tPlayersInfo[iCurIndex].eEnding;
+    }
 
     g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
+
+    // 엔딩 변수 설정
+    g_tStoreData.tPlayersInfo[iCurIndex].eEnding = eEnding;
 
     g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
     g_tStoreData.start = tPlayerInfo.start;
@@ -326,6 +338,8 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     if (g_isHit[iCurIndex])
         g_isHit[iCurIndex] = false;
 
+    // 엔딩 판정
+    CheckEnding(iCurIndex);
 
     // 데이터 보내기
     retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
@@ -338,6 +352,38 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     return TRUE;
 }
 
+void CheckEnding(int iCurIndex)
+{
+    if (g_bEnding)
+        return;
+
+    if (g_tStoreData.tPlayersInfo[iCurIndex].isDead)
+    {
+        TEAMNUM::TEAM eNowTeam = g_tStoreData.tPlayersInfo[iCurIndex].team;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (i == iCurIndex)
+                continue;
+
+            if (g_tStoreData.tPlayersInfo[i].team == eNowTeam && g_tStoreData.tPlayersInfo[i].isDead)
+            {
+                g_bEnding = true;
+                g_tStoreData.tPlayersInfo[iCurIndex].eEnding = ENDING::LOSE;
+                g_tStoreData.tPlayersInfo[i].eEnding = ENDING::LOSE;
+                for (int j = 0; j < 4; j++)
+                {
+                    if (j == i || j == iCurIndex)
+                        continue;
+                    g_tStoreData.tPlayersInfo[j].eEnding = ENDING::WIN;
+
+                }
+                break;
+            }
+        }
+      
+    }
+}
 void CreateHpPotion()
 {
     fPotionCreateTime += m_GameTimer.GetTimeElapsed();

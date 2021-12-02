@@ -20,8 +20,7 @@ public:
 
 private:
 	void	CheckHit();
-
-
+	void	CheckRevie();
 public:
 	void Set_Bullet(list<CObj*>* _pBullet) { m_pBullet = _pBullet; }
 	void Set_Shield(list<CObj*>* _pShield) { m_pShield = _pShield; }
@@ -109,6 +108,10 @@ private:
 	int				m_iNormal_Idx;
 	int				m_iFire_Idx;
 	int				m_iBlast_Idx;
+
+
+private:
+	DWORD			m_dwDaedTime;
 
 
 };
