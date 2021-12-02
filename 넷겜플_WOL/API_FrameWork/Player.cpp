@@ -135,7 +135,11 @@ int CPlayer::Update()
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
 	/// ////////////////////////////////////////////////
 
-
+	if (g_tPlayerInit.start && !m_bStart)
+	{
+		Set_Pos(g_tPlayerInit.tPos.fX, g_tPlayerInit.tPos.fY);
+		m_bStart = true;
+	}
 
 	return OBJ_NOEVENT;
 }

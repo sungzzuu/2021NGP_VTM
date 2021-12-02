@@ -16,10 +16,13 @@ CGameTimer m_GameTimer;
 // 체력약 관련
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
-float fStartTime = 0.f;
+
 LONG iHpPotionIndex;
 
-PLAYER_INIT tPlayerInit;
+PLAYER_INIT g_PlayerInit;
+float fStartTime = 0.f;
+
+
 STORE_DATA g_tStoreData;
 
 bool isGameStart = false;
@@ -40,6 +43,7 @@ bool SendRecv_HpPotionInfo(SOCKET sock);
 bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
 
 void CountStart();
+void Get_InitPos(int idx, PLAYER_INIT_SEND& tPlayerInitSend);
 
 CRITICAL_SECTION g_csHpPotion;
 
@@ -212,36 +216,33 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
 
-        // 시간 구조체 send recv, 배치, Key_Check()
 
 
+        // 타이머, 플레이어 배치, 팀 나누기
 		if (!SendPlayerInit(client_sock, iCurIndex))
 		{
 			SetEvent(g_hClientEvent[iCurIndex]);
 			break;
 		}
 
-        if (tPlayerInit.start == true)
-        {
-            //플레이어 데이터 받기
-            //////////////////////////////////////////////////////
-            if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
-            {
-                SetEvent(g_hClientEvent[iCurIndex]);
-                break;
-            }
-            //////////////////////////////////////////////////////
+		//플레이어 데이터 받기
+		//////////////////////////////////////////////////////
+		if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
+		{
+			SetEvent(g_hClientEvent[iCurIndex]);
+			break;
+		}
+		//////////////////////////////////////////////////////
 
 
-            // 체력약
-            if (!SendRecv_HpPotionInfo(client_sock))
-            {
-                SetEvent(g_hClientEvent[iCurIndex]);
-                break;
-            }
-        }
+		// 체력약
+		if (!SendRecv_HpPotionInfo(client_sock))
+		{
+			SetEvent(g_hClientEvent[iCurIndex]);
+			break;
+		}
 
-        //tPlayerInit.start 조건문 안에 들어가면 멈춤
+
 		// 공격
 		if (!SendRecv_AttackInfo(client_sock, iCurIndex))
 		{
@@ -275,9 +276,6 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     closesocket(client_sock);
     printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
         inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
-    //종료하면 해당 인덱스 화면에서 안보이게
-    g_tStoreData.tPlayersInfo[iCurIndex].tPos.fX = 1000.f;
-    g_tStoreData.tPlayersInfo[iCurIndex].tPos.fY = 1000.f;
 
     return 0;
 
@@ -294,7 +292,7 @@ DWORD WINAPI ServerMain(LPVOID arg)
 		if (g_iClientCount == 4)   // 클라 4명이면 스타트
 		{
 			m_GameTimer.Tick(60.0f);
-			if (!tPlayerInit.start)
+			if (!g_PlayerInit.start)
 				CountStart();
 			CreateHpPotion();
 		}
@@ -515,11 +513,18 @@ bool SendPlayerInit(SOCKET sock, int PlayerIndex)
 {
     int retval;
 
-    tPlayerInit.iCount = (int)fStartTime;
+    g_PlayerInit.iCount = (int)fStartTime;
+    PLAYER_INIT_SEND tPlayerInitSend;
+    tPlayerInitSend.start = g_PlayerInit.start;
+    tPlayerInitSend.idx = PlayerIndex;
+    tPlayerInitSend.iCount = g_PlayerInit.iCount;
 
-    if (PlayerIndex == 1 || PlayerIndex == 3) { tPlayerInit.team[PlayerIndex] = TEAMNUM::TEAM1; }
-    else { tPlayerInit.team[PlayerIndex] = TEAMNUM::TEAM2; }
-    retval = send(sock, (char*)&tPlayerInit, sizeof(PLAYER_INIT), 0);
+    if (g_PlayerInit.start)
+    {
+        Get_InitPos(PlayerIndex, tPlayerInitSend);
+    }
+
+    retval = send(sock, (char*)&tPlayerInitSend, sizeof(PLAYER_INIT_SEND), 0);
     if (retval == SOCKET_ERROR)
     {
         err_display("send()");
@@ -531,13 +536,59 @@ bool SendPlayerInit(SOCKET sock, int PlayerIndex)
 void CountStart()
 {
     fStartTime += m_GameTimer.GetTimeElapsed();  // 이전 프레임에서 현재 프레임까지 시간 
-    std::cout << 6 - (int)fStartTime << std::endl;
+    //std::cout << 6 - (int)fStartTime << std::endl;
     if (fStartTime >= START_TIME)
     {
-        tPlayerInit.start = true;
+        g_PlayerInit.start = true;
     }
 }
 // 남은 시간 보여주기
 // 
 // 플레이어 좌표 세팅
 // 플레이어 대기중 -> 남은시간 -> 플레이어 배치(좌표)
+
+void Get_InitPos(int idx, PLAYER_INIT_SEND& tPlayerInitSend)
+{
+
+    switch (idx)
+    {
+    case 0:
+    {
+        tPlayerInitSend.tPos = { 300.f, 300.f };
+
+    }
+    break;
+    case 1:
+    {
+        tPlayerInitSend.tPos = { 900.f, 300.f };
+
+    }
+    break;
+    case 2:
+    {
+        tPlayerInitSend.tPos = { 300.f, 600.f };
+
+    }
+    break;
+    case 3:
+    {
+        tPlayerInitSend.tPos = { 900.f, 600.f };
+
+    }
+    break;
+    default:
+        break;
+    }
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (i % 2)
+        {
+            tPlayerInitSend.team[i] = TEAMNUM::TEAM1;
+        }
+        else
+        {
+            tPlayerInitSend.team[i] = TEAMNUM::TEAM2;
+        }
+    }
+}

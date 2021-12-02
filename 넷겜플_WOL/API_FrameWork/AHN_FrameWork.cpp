@@ -51,7 +51,7 @@ POTIONRES g_tHpPotionRes;
 void Add_Potion(HpPotionCreate);
 void Delete_Potion(HpPotionDelete hpPotionDelete);
 
-PLAYER_INIT g_tPlayerInit;
+PLAYER_INIT_SEND g_tPlayerInit;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -282,20 +282,15 @@ DWORD WINAPI ServerProcess(LPVOID arg)
 		if (retval == FALSE)
 			break;
 
+		retval = SendRecvPlayerInfo(sock);
+		if (retval == FALSE)
+			break;
 
-		if (g_tPlayerInit.start == true)
-		{
-			retval = SendRecvPlayerInfo(sock);
-			if (retval == FALSE)
-				break;
-		
-			// 체력약
-			retval = SendRecvHpPotionInfo(sock);
-			if (retval == FALSE)
-				break;
-		}
+		// 체력약
+		retval = SendRecvHpPotionInfo(sock);
+		if (retval == FALSE)
+			break;
 
-		//g_tPlayerInit.start 조건문 안에 들어가면 멈춤
 		// 공격
 		retval = SendRecvAttacks(sock);
 		if (retval == FALSE)
@@ -481,7 +476,7 @@ bool RecvPlayerInit(SOCKET sock)
 {
 	int retval;
 
-	retval = recvn(sock, (char*)&g_tPlayerInit , sizeof(PLAYER_INIT), 0);
+	retval = recvn(sock, (char*)&g_tPlayerInit, sizeof(PLAYER_INIT_SEND), 0);
 	if (retval == SOCKET_ERROR)
 	{
 		err_display("recv()");
@@ -489,9 +484,13 @@ bool RecvPlayerInit(SOCKET sock)
 	}
 	else if (retval == 0)
 		return FALSE;
-	
+
 	//buf[retval] = '\0';
 	//printf("(%f, %f)\n", g_tPlayerInit.tPos.fX, g_tPlayerInit.tPos.fY);
 	//std::cout<< CDataMgr::Get_Instance()->m_tStoreData.team[1] << std::endl;
-	//std::cout <<"2" <<g_tPlayerInit.tPos.fX << std::endl;
+	for (int i = 0; i < 4; ++i)
+	{
+		std::cout << g_tPlayerInit.team[i] << std::endl;
+	}
+
 }

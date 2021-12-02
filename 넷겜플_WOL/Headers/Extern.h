@@ -5,7 +5,7 @@
 
 extern HWND g_hWnd;
 extern POTIONRES g_tHpPotionRes;
-extern PLAYER_INIT g_tPlayerInit;
+extern PLAYER_INIT_SEND g_tPlayerInit;
 extern HANDLE hServerProcess;
 extern DWORD WINAPI ServerProcess(LPVOID arg);
 
