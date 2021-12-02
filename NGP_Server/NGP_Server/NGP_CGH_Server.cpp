@@ -524,6 +524,7 @@ void CheckCollision(int iIndex)
 
     for (int i = 0; i < 4/*g_iClientCount*/; ++i)
     {
+        //자기 자신 검사x
 		if (iCurIndex == i)
 			continue;
 
@@ -531,33 +532,18 @@ void CheckCollision(int iIndex)
         if (g_tStoreData.tPlayersInfo[i].isDead)
             continue;
 
+        //같은팀이면 충돌x
+        if(g_tStoreData.team[iCurIndex] == g_tStoreData.team[i])
+            continue;
+
 		for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //본인의 스킬 갯수
 		{
 			if (Check_Sphere_SkillPlayer(g_pAttackData[iCurIndex].pAttackInfo[j].tInfo, g_tStoreData.tPlayersInfo[i].tPos))
 			{
-                //std::cout << i << "클라 충돌\n";
 				g_pAttackData[iCurIndex].pAttackInfo[j].bCollision = true; 
                 g_isHit[i] = true;
 			}
 		}
-
-		//if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
-		//{
-		//    if (x > y)
-		//    {
-		//        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
-		//            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
-		//        else
-		//            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
-		//    }
-		//    else
-		//    {
-		//        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
-		//            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
-		//        else
-		//            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
-		//    }
-		//}
 	}
 }
 

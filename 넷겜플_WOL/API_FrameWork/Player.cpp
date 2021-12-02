@@ -208,7 +208,6 @@ void CPlayer::Render(HDC _DC)
 	{
 		STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
 
-
 		if (i != tStoreData.iClientIndex)
 		{
 			PLAYER_INFO tPlayerInfo = tStoreData.tPlayersInfo[i];
@@ -232,12 +231,6 @@ void CPlayer::Render(HDC _DC)
 }
 
 
-void CPlayer::UpdateBeforeRender()
-{
-	STORE_DATA tStoreData = CDataMgr::Get_Instance()->m_tStoreData;
-	m_tInfo.fX = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fX;
-	m_tInfo.fY = tStoreData.tPlayersInfo[tStoreData.iClientIndex].tPos.fY;
-}
 
 void CPlayer::CheckHit()
 {
@@ -247,16 +240,19 @@ void CPlayer::CheckHit()
 	int iIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
 	if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
 	{
-		m_iHp -= 1; //임의로
+		m_iHp -= 5; //임의로
 		if (m_iHp < 0)
 		{
 			m_iHp = 0;
 			//CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isDead = true;
 			CDataMgr::Get_Instance()->m_tPlayerInfo.isDead = true;
 
+			m_eCurState = DEAD;
+			m_pFrameKey = L"Player_DOWN";
 		}
-		//std::cout << iIndex << "-hp:" << m_iHp << std::endl;
 		CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit = false;
+
+		std::cout << iIndex << "번째 hp: " << m_iHp << std::endl;
 	}
 }
 
@@ -268,6 +264,10 @@ void CPlayer::Release()
 
 void CPlayer::Key_Check()
 {
+	//죽었을때 키입력 안받음
+	if (CDataMgr::Get_Instance()->m_tPlayerInfo.isDead)
+		return;
+
 	Move();
 	Dash();
 	Hit();
@@ -350,6 +350,11 @@ void CPlayer::Scene_Change()
 			m_tFrame.dwFrameTime = GetTickCount();
 			break;
 		case CPlayer::DEAD:
+			m_tFrame.iFrameStart = 0;
+			m_tFrame.iFrameEnd = 6;
+			m_tFrame.iFrameScene = 6;
+			m_tFrame.dwFrameSpeed = 80;
+			m_tFrame.dwFrameTime = GetTickCount();
 			break;
 		}
 		m_ePreState = m_eCurState;

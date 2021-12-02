@@ -43,6 +43,12 @@ void CObj::Frame_Move()
 		m_tFrame.dwFrameTime = GetTickCount();
 
 		if (m_tFrame.iFrameStart > m_tFrame.iFrameEnd)
-			m_tFrame.iFrameStart = 0;
+		{
+			//죽은 상태 마지막 프레임 고정
+			if (m_eCurState == DEAD)
+				m_tFrame.iFrameStart = m_tFrame.iFrameEnd;
+			else
+				m_tFrame.iFrameStart = 0;
+		}
 	}
 }

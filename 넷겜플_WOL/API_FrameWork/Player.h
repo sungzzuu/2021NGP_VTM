@@ -19,7 +19,6 @@ public:
 	virtual void Release() override;
 
 private:
-	void	UpdateBeforeRender();
 	void	CheckHit();
 
 
