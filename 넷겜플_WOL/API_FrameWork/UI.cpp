@@ -78,8 +78,8 @@ void CUI::Render(HDC _DC)
 			tRect.top = (LONG)(tStoreData.tPlayersInfo[i].tPos.fY - (m_tInfo.iCY >> 1));
 
 			GdiTransparentBlt(_DC
-				, tRect.left + Image_Dif_X, tRect.top + Image_Dif_Y - 70
-				, 106, 15
+				, tRect.left + Image_Dif_X - 15, tRect.top + Image_Dif_Y - 70
+				, 156, 15
 				, hMemDC
 				, 0, 0
 				, 260, 41
@@ -110,8 +110,8 @@ void CUI::Render(HDC _DC)
 			if (tStoreData.start == true)	//체력바 그리기
 			{
 				GdiTransparentBlt(_DC
-					, tRect.left + Image_Dif_X + 3, tRect.top + Image_Dif_Y - 66
-					, tStoreData.iHp[i] - 50, 10
+					, tRect.left + Image_Dif_X - 12, tRect.top + Image_Dif_Y - 66
+					, tStoreData.iHp[i], 10
 					, hMemDC
 					, 0, 0
 					, 244, 32
