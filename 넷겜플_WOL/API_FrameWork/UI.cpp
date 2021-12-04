@@ -21,6 +21,7 @@ void CUI::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_HPBAR.bmp", L"UI_HPBAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_MANABAR.bmp", L"UI_MANABAR");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/UI/UI_BAR.bmp", L"UI_BAR");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/GameStartTime.bmp", L"GameStartTime");
 
 
 	m_tInfo.iCX = 120;
@@ -178,21 +179,18 @@ void CUI::Render(HDC _DC)
 		192, 16,
 		RGB(255, 0, 255));
 
-	if (g_tPlayerInit.iCount == 5)
+	if (!g_tPlayerInit.start)
 	{
-		BeginPaint(g_hWnd, &ps);
-		SetTextColor(_DC, RGB(255, 0, 0));
-		wsprintf(lpOut, TEXT("START!"));	// 카운트 다운
-		TextOut(_DC, 600, 100, lpOut, lstrlen(lpOut));
-		EndPaint(g_hWnd, &ps);
-	}
-	else
-	{
-		BeginPaint(g_hWnd, &ps);
-		SetTextColor(_DC, RGB(255, 0, 0));
-		wsprintf(lpOut, TEXT("%d"), 5 - g_tPlayerInit.iCount);	// 카운트 다운
-		TextOut(_DC, 600, 100, lpOut, lstrlen(lpOut));
-		EndPaint(g_hWnd, &ps);
+		int leftTime = 4 - g_tPlayerInit.iCount;
+		hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"GameStartTime");
+
+		GdiTransparentBlt(_DC
+			, WINCX / 2 - 200, WINCY / 2 - 300
+			, 400, 600
+			, hMemDC
+			, leftTime * 200, 0
+			, 200, 300
+			, RGB(255, 255, 255));
 	}
 }
 
