@@ -33,6 +33,7 @@ private:
 	static CDataMgr* m_pInstance;
 
 public:
+	PLAYER_INIT			m_tPlayerInit;
 	PLAYER_INFO			m_tPlayerInfo;
 	STORE_DATA			m_tStoreData;
 	AttackData			m_pAttackData;

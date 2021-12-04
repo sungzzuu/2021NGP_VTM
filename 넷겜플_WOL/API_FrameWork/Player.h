@@ -110,6 +110,7 @@ private:
 	int				m_iFire_Idx;
 	int				m_iBlast_Idx;
 
+	bool			m_bStart;
 
 };
 
