@@ -1,45 +1,54 @@
-ï»¿#include "pch.h"
+#include "pch.h"
 #include <iostream>
 
 struct MyThread
 {
-	int iIndex = 0;
-	SOCKET sock = 0;
+    int iIndex = 0;
+    SOCKET sock = 0;
 };
 
 HANDLE g_hClientEvent[4];
 int g_iWaitClientIndex[4];
-int g_iClientCount = 0; //ì ‘ì†í•œ í´ë¼ ê°¯ìˆ˜
+int g_iClientCount = 0; //Á¢¼ÓÇÑ Å¬¶ó °¹¼ö
 
 CGameTimer m_GameTimer;
 
-// ì²´ë ¥ì•½ ê´€ë ¨
+// Ã¼·Â¾à °ü·Ã
 HpPotionInfo g_tHpPotionInfo;
 float fPotionCreateTime = 0.f;
 LONG iHpPotionIndex;
+
+// °ÔÀÓ½ÃÀÛ °ü·Ã
+PLAYER_INIT g_PlayerInit;
+float fStartTime = 0.f;
+
 
 STORE_DATA g_tStoreData;
 
 bool isGameStart = false;
 
-// ê³µê²© ê´€ë ¨
+// °ø°İ °ü·Ã
 AttackData g_pAttackData[4];
 
 DWORD WINAPI ProcessClient(LPVOID arg);
 DWORD WINAPI ServerMain(LPVOID arg);
 
-//í”Œë ˆì´ì–´ ê´€ë ¨
+//ÇÃ·¹ÀÌ¾î °ü·Ã
+bool SendPlayerInit(SOCKET sock, int PlayerIndex);  // °ÔÀÓ½ÃÀÛ¿©ºÎ º¸³»±â
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex);
 
 
-// ì²´ë ¥ì•½ ê´€ë ¨
+// Ã¼·Â¾à °ü·Ã
 void CreateHpPotion();
 bool SendRecv_HpPotionInfo(SOCKET sock);
 bool SendRecv_AttackInfo(SOCKET sock, int clientIndex);
 
+void CountStart();
+void Get_InitPos(int idx, PLAYER_INIT_SEND& tPlayerInitSend);
+
 CRITICAL_SECTION g_csHpPotion;
 
-//ì¶©ëŒ
+//Ãæµ¹
 void CheckCollision(int iIndex);
 bool Check_Sphere_PlayerSkill(POS& tMePos, INFO& tYouPos);
 bool Check_Sphere_SkillPlayer(INFO& tMePos, POS& tYouPos);
@@ -48,48 +57,52 @@ bool Check_Sphere(POS& tMePos, POS& tYouPos);
 bool Check_Rect(POS& tMePos, POS& tYouPos, float* _x, float* _y);
 bool g_isHit[4] = { false };
 
+// ¿£µù
+bool g_bEnding = false;
+void CheckEnding(int iCurIndex);
+
 
 void err_quit(char* msg)
 {
-	LPVOID lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
-	LocalFree(lpMsgBuf);
-	exit(1);
+    LPVOID lpMsgBuf;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, WSAGetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL);
+    MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+    LocalFree(lpMsgBuf);
+    exit(1);
 }
 void err_display(char* msg)
 {
-	LPVOID lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	printf("[%s] %s", msg, (char*)lpMsgBuf);
-	LocalFree(lpMsgBuf);
+    LPVOID lpMsgBuf;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, WSAGetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL);
+    printf("[%s] %s", msg, (char*)lpMsgBuf);
+    LocalFree(lpMsgBuf);
 }
 int recvn(SOCKET s, char* buf, int len, int flags)
 {
-	int received;
-	char* ptr = buf;
-	int left = len;
+    int received;
+    char* ptr = buf;
+    int left = len;
 
-	while (left > 0)
-	{
-		received = recv(s, ptr, left, flags);
-		if (received == SOCKET_ERROR)
-			return SOCKET_ERROR;
-		else if (received == 0)
-			break;
-		left -= received;
-		ptr += received;
-	}
+    while (left > 0)
+    {
+        received = recv(s, ptr, left, flags);
+        if (received == SOCKET_ERROR)
+            return SOCKET_ERROR;
+        else if (received == 0)
+            break;
+        left -= received;
+        ptr += received;
+    }
 
-	return (len - left);
+    return (len - left);
 }
 
 //////////////
@@ -101,12 +114,12 @@ int main(int argc, char* argv[])
 
     srand(unsigned int(time(NULL)));
 
-    // ServerMain ìŠ¤ë ˆë“œ
+    // ServerMain ½º·¹µå
     CreateThread(NULL, 0, ServerMain, 0, 0, NULL);
 
     int retval;
 
-    // ìœˆì† ì´ˆê¸°í™”
+    // À©¼Ó ÃÊ±âÈ­
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         return 1;
@@ -128,15 +141,15 @@ int main(int argc, char* argv[])
     retval = listen(listen_sock, SOMAXCONN);
     if (retval == SOCKET_ERROR) err_quit("listen()");
 
-    // ë°ì´í„° í†µì‹ ì— ì‚¬ìš©í•  ë³€ìˆ˜
+    // µ¥ÀÌÅÍ Åë½Å¿¡ »ç¿ëÇÒ º¯¼ö
     SOCKET client_sock;
     SOCKADDR_IN clientaddr;
     int addrlen;
     HANDLE hThread;
 
 
-    //ì´ë²¤íŠ¸ ìƒì„±
-    //í´ë¼4ê°œ ì ‘ì†ì¤‘ì¼ë•Œ 0ì´ 3ë²ˆ, 1ì´ 0ë²ˆ, 2ê°€ 1ë²ˆ, 3ì´ 2ë²ˆ, ì´ë²¤íŠ¸ ê¸°ë‹¤ë¦¼
+    //ÀÌº¥Æ® »ı¼º
+    //Å¬¶ó4°³ Á¢¼ÓÁßÀÏ¶§ 0ÀÌ 3¹ø, 1ÀÌ 0¹ø, 2°¡ 1¹ø, 3ÀÌ 2¹ø, ÀÌº¥Æ® ±â´Ù¸²
     for (int i = 0; i < 4; ++i)
     {
         g_hClientEvent[i] = CreateEvent(NULL, FALSE, (i < 3 ? FALSE : TRUE), NULL);
@@ -164,11 +177,11 @@ int main(int argc, char* argv[])
         ++g_iClientCount;
         ++tThread.iIndex;
 
-        // ì ‘ì†í•œ í´ë¼ì´ì–¸íŠ¸ ì •ë³´ ì¶œë ¥
-        printf("\n[TCP ì„œë²„] í´ë¼ì´ì–¸íŠ¸ ì ‘ì†: IP ì£¼ì†Œ=%s, í¬íŠ¸ ë²ˆí˜¸=%d\n",
+        // Á¢¼ÓÇÑ Å¬¶óÀÌ¾ğÆ® Á¤º¸ Ãâ·Â
+        printf("\n[TCP ¼­¹ö] Å¬¶óÀÌ¾ğÆ® Á¢¼Ó: IP ÁÖ¼Ò=%s, Æ÷Æ® ¹øÈ£=%d\n",
             inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
-        // ìŠ¤ë ˆë“œ ìƒì„±
+        // ½º·¹µå »ı¼º
         hThread = CreateThread(NULL, 0, ProcessClient, &tThread, 0, NULL);
 
         if (hThread == NULL) { closesocket(client_sock); }
@@ -180,7 +193,7 @@ int main(int argc, char* argv[])
 
     DeleteCriticalSection(&g_csHpPotion);
 
-    // ìœˆì† ì¢…ë£Œ
+    // À©¼Ó Á¾·á
     WSACleanup();
     return 0;
 }
@@ -188,19 +201,19 @@ int main(int argc, char* argv[])
 
 
 
-// í´ë¼ì´ì–¸íŠ¸ì™€ ë°ì´í„° í†µì‹ 
+// Å¬¶óÀÌ¾ğÆ®¿Í µ¥ÀÌÅÍ Åë½Å
 DWORD WINAPI ProcessClient(LPVOID arg)
 {
     MyThread* pThread = (MyThread*)arg;
     SOCKET client_sock = (SOCKET)pThread->sock;
-    int iCurIndex = pThread->iIndex - 1; //í˜„ì¬ ì“°ë ˆë“œ ì¸ë±ìŠ¤, ë°°ì—´ ì¸ë±ìŠ¤ë¡œ ì‚¬ìš©í•´ì„œ -1
+    int iCurIndex = pThread->iIndex - 1; //ÇöÀç ¾²·¹µå ÀÎµ¦½º, ¹è¿­ ÀÎµ¦½º·Î »ç¿ëÇØ¼­ -1
 
     int retval;
     SOCKADDR_IN clientaddr;
     int addrlen;
     char buf[BUFSIZE + 1];
 
-    // í´ë¼ì´ì–¸íŠ¸ ì •ë³´ ì–»ê¸°
+    // Å¬¶óÀÌ¾ğÆ® Á¤º¸ ¾ò±â
     addrlen = sizeof(clientaddr);
     getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
 
@@ -213,12 +226,18 @@ DWORD WINAPI ProcessClient(LPVOID arg)
             else
                 isGameStart = true;
         }
-        
+
         if (g_iClientCount >= 2)
             WaitForSingleObject(g_hClientEvent[g_iWaitClientIndex[iCurIndex]], INFINITE);
 
+        // Å¸ÀÌ¸Ó, ÇÃ·¹ÀÌ¾î ¹èÄ¡, ÆÀ ³ª´©±â
+        if (!SendPlayerInit(client_sock, iCurIndex))
+        {
+            SetEvent(g_hClientEvent[iCurIndex]);
+            break;
+        }
 
-        //í”Œë ˆì´ì–´ ë°ì´í„° ë°›ê¸°
+        //ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ ¹Ş±â
         //////////////////////////////////////////////////////
         if (!SendRecv_PlayerInfo(client_sock, iCurIndex))
         {
@@ -228,20 +247,22 @@ DWORD WINAPI ProcessClient(LPVOID arg)
         //////////////////////////////////////////////////////
 
 
-        // ì²´ë ¥ì•½
+
+        // Ã¼·Â¾à
         if (!SendRecv_HpPotionInfo(client_sock))
         {
             SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
 
-        // ê³µê²©
+        // °ø°İ
         if (!SendRecv_AttackInfo(client_sock, iCurIndex))
         {
             SetEvent(g_hClientEvent[iCurIndex]);
             break;
         }
-        
+
+
         SetEvent(g_hClientEvent[iCurIndex]);
     }
 
@@ -250,10 +271,10 @@ DWORD WINAPI ProcessClient(LPVOID arg)
     {
         for (int i = 0; i < 4; ++i)
         {
-            //ìì‹ ì„ ì°¸ì¡°í•˜ë˜ í´ë¼ë¥¼ ì°¾ìŒ
+            //ÀÚ½ÅÀ» ÂüÁ¶ÇÏ´ø Å¬¶ó¸¦ Ã£À½
             if (g_iWaitClientIndex[i] == iCurIndex)
             {
-                g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //ìì‹ ì´ ì°¸ì¡°í•˜ê³ ìˆë˜ ì¸ë±ìŠ¤ë¡œ ë°”ê¿”ì¤Œ
+                g_iWaitClientIndex[i] = g_iWaitClientIndex[iCurIndex]; //ÀÚ½ÅÀÌ ÂüÁ¶ÇÏ°íÀÖ´ø ÀÎµ¦½º·Î ¹Ù²ãÁÜ
                 g_iWaitClientIndex[iCurIndex] = -1;
                 break;
             }
@@ -265,30 +286,35 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 
     // closesocket()
     closesocket(client_sock);
-    printf("[TCP ì„œë²„] í´ë¼ì´ì–¸íŠ¸ ì¢…ë£Œ: IP ì£¼ì†Œ=%s, í¬íŠ¸ ë²ˆí˜¸=%d\n",
+    printf("[TCP ¼­¹ö] Å¬¶óÀÌ¾ğÆ® Á¾·á: IP ÁÖ¼Ò=%s, Æ÷Æ® ¹øÈ£=%d\n",
         inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 
     return 0;
 
 }
 
-// ì„œë²„ í”„ë¡œì„¸ìŠ¤ êµ¬í˜„
+// ¼­¹ö ÇÁ·Î¼¼½º ±¸Çö
 DWORD WINAPI ServerMain(LPVOID arg)
 {
-	m_GameTimer.Reset();
+    m_GameTimer.Reset();
 
     while (true)
     {
-        // 1. ì²´ë ¥ì•½ ì‹œê°„ì¬ì„œ ë³´ë‚´ê¸°
-        m_GameTimer.Tick(60.0f);
-        CreateHpPotion();
+        // 1. Ã¼·Â¾à ½Ã°£Àç¼­ º¸³»±â
+        if (g_iClientCount == 4)   // Å¬¶ó 4¸íÀÌ¸é ½ºÅ¸Æ®
+        {
+            m_GameTimer.Tick(60.0f);
+            if (!g_PlayerInit.start)
+                CountStart();
+            CreateHpPotion();
+        }
+
     }
 }
 
-
 bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
 {
-    int retval,iCurIndex = iIndex;
+    int retval, iCurIndex = iIndex;
 
     PLAYER_INFO tPlayerInfo;
     retval = recvn(client_sock, (char*)&tPlayerInfo, sizeof(PLAYER_INFO), 0);
@@ -301,16 +327,25 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
         return FALSE;
 
 
-    // ë°›ì€ ë°ì´í„° ì¶œë ¥
+    // ¹ŞÀº µ¥ÀÌÅÍ Ãâ·Â
     //buf[retval] = '\0';
     //printf("[%d] (%f, %f)\n", iCurIndex, tPlayerInfo.tPos.fX, tPlayerInfo.tPos.fY);
-    if (g_iClientCount == 4)    // í´ë¼ 4ëª…ì´ë©´ ìŠ¤íƒ€íŠ¸
+    if (g_iClientCount == 4)    // Å¬¶ó 4¸íÀÌ¸é ½ºÅ¸Æ®
     {
         tPlayerInfo.start = true;
+    }
+    // ¿£µù º¯¼ö ÀúÀå
+    ENDING::END_TYPE eEnding = ENDING::ING;
+    if (g_bEnding)
+    {
+        eEnding = g_tStoreData.tPlayersInfo[iCurIndex].eEnding;
     }
 
     g_tStoreData.tPlayersInfo[iCurIndex] = tPlayerInfo;
     g_tStoreData.iClientIndex = iCurIndex;
+
+    // ¿£µù º¯¼ö ¼³Á¤
+    g_tStoreData.tPlayersInfo[iCurIndex].eEnding = eEnding;
 
     g_tStoreData.iHp[iCurIndex] = tPlayerInfo.iHp;
     g_tStoreData.start = tPlayerInfo.start;
@@ -321,7 +356,10 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     if (g_isHit[iCurIndex])
         g_isHit[iCurIndex] = false;
 
-    // ë°ì´í„° ë³´ë‚´ê¸°
+    // ¿£µù ÆÇÁ¤
+    CheckEnding(iCurIndex);
+
+    // µ¥ÀÌÅÍ º¸³»±â
     retval = send(client_sock, (char*)&g_tStoreData, sizeof(STORE_DATA), 0);
     if (retval == SOCKET_ERROR)
     {
@@ -332,6 +370,38 @@ bool SendRecv_PlayerInfo(SOCKET client_sock, int iIndex)
     return TRUE;
 }
 
+void CheckEnding(int iCurIndex)
+{
+    if (g_bEnding)
+        return;
+
+    if (g_tStoreData.tPlayersInfo[iCurIndex].isDead)
+    {
+        TEAMNUM::TEAM eNowTeam = g_tStoreData.tPlayersInfo[iCurIndex].team;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (i == iCurIndex)
+                continue;
+
+            if (g_tStoreData.tPlayersInfo[i].team == eNowTeam && g_tStoreData.tPlayersInfo[i].isDead)
+            {
+                g_bEnding = true;
+                g_tStoreData.tPlayersInfo[iCurIndex].eEnding = ENDING::LOSE;
+                g_tStoreData.tPlayersInfo[i].eEnding = ENDING::LOSE;
+                for (int j = 0; j < 4; j++)
+                {
+                    if (j == i || j == iCurIndex)
+                        continue;
+                    g_tStoreData.tPlayersInfo[j].eEnding = ENDING::WIN;
+
+                }
+                break;
+            }
+        }
+
+    }
+}
 void CreateHpPotion()
 {
     fPotionCreateTime += m_GameTimer.GetTimeElapsed();
@@ -344,9 +414,9 @@ void CreateHpPotion()
         g_tHpPotionInfo.thpPotionCreate.cnt = 0;
         g_tHpPotionInfo.thpPotionCreate.bCreateOn = true;
         g_tHpPotionInfo.thpPotionCreate.index = iHpPotionIndex++;
-        g_tHpPotionInfo.thpPotionCreate.pos.fX = (rand() % 1000) + 50; // ë²”ìœ„ ì¬ì„¤ì • í•„ìš”
-        g_tHpPotionInfo.thpPotionCreate.pos.fY = (rand() % 500) + 50;  // ë²”ìœ„ ì¬ì„¤ì • í•„ìš”
-        //printf("í¬ì…˜ìƒì„±\n");
+        g_tHpPotionInfo.thpPotionCreate.pos.fX = (rand() % 1000) + 50; // ¹üÀ§ Àç¼³Á¤ ÇÊ¿ä
+        g_tHpPotionInfo.thpPotionCreate.pos.fY = (rand() % 500) + 50;  // ¹üÀ§ Àç¼³Á¤ ÇÊ¿ä
+        //printf("Æ÷¼Ç»ı¼º\n");
         LeaveCriticalSection(&g_csHpPotion);
 
     }
@@ -357,14 +427,14 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
 {
     int retval;
 
-    // ë™ê¸°í™” ì˜¤ë¥˜
-    // ì—¬ê¸°ì„œ g_tHpPotionInfoëŠ” ê³µìœ ìì›
-    // ì„œë¡œ ë‹¤ë¥¸ ìŠ¤ë ˆë“œì—ì„œ ë™ì‹œì— ì ‘ê·¼í•˜ë¯€ë¡œ ê°ì²´ê°€ ë³€í•¨
-    // MainìŠ¤ë ˆë“œë„ ë™ê¸°í™”ë¥¼ í•´ì•¼í•¨
-  
+    // µ¿±âÈ­ ¿À·ù
+    // ¿©±â¼­ g_tHpPotionInfo´Â °øÀ¯ÀÚ¿ø
+    // ¼­·Î ´Ù¸¥ ½º·¹µå¿¡¼­ µ¿½Ã¿¡ Á¢±ÙÇÏ¹Ç·Î °´Ã¼°¡ º¯ÇÔ
+    // Main½º·¹µåµµ µ¿±âÈ­¸¦ ÇØ¾ßÇÔ
+
     EnterCriticalSection(&g_csHpPotion);
 
-    // ì²´ë ¥ì•½ ìƒì„± ì •ë³´ ë³´ë‚´ê¸°
+    // Ã¼·Â¾à »ı¼º Á¤º¸ º¸³»±â
     retval = send(sock, (char*)&g_tHpPotionInfo, sizeof(HpPotionInfo), 0);
     if (retval == SOCKET_ERROR)
     {
@@ -373,25 +443,25 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
 
         return FALSE;
     }
-    
-    // [ì²´ë ¥ì•½ìƒì„±] í˜„ì¬ì ‘ì†ëœ ëª¨ë“  í´ë¼ì— ë³´ëƒˆìœ¼ë©´ ë³€ìˆ˜ ì´ˆê¸°í™”
+
+    // [Ã¼·Â¾à»ı¼º] ÇöÀçÁ¢¼ÓµÈ ¸ğµç Å¬¶ó¿¡ º¸³ÂÀ¸¸é º¯¼ö ÃÊ±âÈ­
     if (g_tHpPotionInfo.thpPotionCreate.bCreateOn)
     {
         g_tHpPotionInfo.thpPotionCreate.cnt++;
 
-        // ì ‘ì†í•œ í´ë¼ì— ê°œìˆ˜ë§Œí¼ ì²´ë ¥ì•½ ì •ë³´ ë³´ëƒˆìœ¼ë©´ ë‹¤ì‹œ 0ìœ¼ë¡œ ë¦¬ì…‹
+        // Á¢¼ÓÇÑ Å¬¶ó¿¡ °³¼ö¸¸Å­ Ã¼·Â¾à Á¤º¸ º¸³ÂÀ¸¸é ´Ù½Ã 0À¸·Î ¸®¼Â
         if (g_tHpPotionInfo.thpPotionCreate.cnt == g_iClientCount)
         {
             ZeroMemory(&g_tHpPotionInfo.thpPotionCreate, sizeof(HpPotionCreate));
         }
     }
 
-    // [ì²´ë ¥ì•½ì‚­ì œ] í˜„ì¬ì ‘ì†ëœ ëª¨ë“  í´ë¼ì— ë³´ëƒˆìœ¼ë©´ ë³€ìˆ˜ ì´ˆê¸°í™”
+    // [Ã¼·Â¾à»èÁ¦] ÇöÀçÁ¢¼ÓµÈ ¸ğµç Å¬¶ó¿¡ º¸³ÂÀ¸¸é º¯¼ö ÃÊ±âÈ­
     if (g_tHpPotionInfo.thpPotionDelete.bDeleteOn)
     {
         g_tHpPotionInfo.thpPotionDelete.cnt++;
 
-        // ì ‘ì†í•œ í´ë¼ì— ê°œìˆ˜ë§Œí¼ ì²´ë ¥ì•½ ì •ë³´ ë³´ëƒˆìœ¼ë©´ ë‹¤ì‹œ 0ìœ¼ë¡œ ë¦¬ì…‹
+        // Á¢¼ÓÇÑ Å¬¶ó¿¡ °³¼ö¸¸Å­ Ã¼·Â¾à Á¤º¸ º¸³ÂÀ¸¸é ´Ù½Ã 0À¸·Î ¸®¼Â
         if (g_tHpPotionInfo.thpPotionDelete.cnt == g_iClientCount)
         {
             ZeroMemory(&g_tHpPotionInfo.thpPotionDelete, sizeof(HpPotionDelete));
@@ -400,7 +470,7 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
     LeaveCriticalSection(&g_csHpPotion);
 
 
-    // ì²´ë ¥ì•½ ì¶©ëŒ ì •ë³´ ë°›ê¸°
+    // Ã¼·Â¾à Ãæµ¹ Á¤º¸ ¹Ş±â
     POTIONRES tHpPotionRes;
 
     retval = recvn(sock, (char*)&tHpPotionRes, sizeof(POTIONRES), 0);
@@ -412,12 +482,12 @@ bool SendRecv_HpPotionInfo(SOCKET sock)
     else if (retval == 0)
         return FALSE;
 
-    // ì¶©ëŒì¼ ê²½ìš° ì²˜ë¦¬ - ë§µì—ì„œ ì‚­ì œ ë° ë‹¤ë¥¸ í´ë¼ì— ì•Œë¦¬ê¸°
+    // Ãæµ¹ÀÏ °æ¿ì Ã³¸® - ¸Ê¿¡¼­ »èÁ¦ ¹× ´Ù¸¥ Å¬¶ó¿¡ ¾Ë¸®±â
     if (tHpPotionRes.bCollision)
     {
-        //printf("í¬ì…˜ì‚­ì œ\n");
+        //printf("Æ÷¼Ç»èÁ¦\n");
 
-        // ì ‘ì† í´ë¼ 1ê°œì¸ ê²½ìš°
+        // Á¢¼Ó Å¬¶ó 1°³ÀÎ °æ¿ì
         if (g_iClientCount == 1)
             return TRUE;
 
@@ -435,7 +505,7 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 {
     int retval;
 
-    // ê³µê²© ì •ë³´ ë°›ê¸° - 1. ë²¡í„°ì˜ í¬ê¸°
+    // °ø°İ Á¤º¸ ¹Ş±â - 1. º¤ÅÍÀÇ Å©±â
     int iSize = 0;
     retval = recvn(sock, (char*)&iSize, sizeof(int), 0);
     if (retval == SOCKET_ERROR)
@@ -453,11 +523,11 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 
     if (iSize != 0)
     {
-        // ë™ì ë°°ì—´ ì´ˆê¸°í™”
+        // µ¿Àû¹è¿­ ÃÊ±âÈ­
         delete[] g_pAttackData[clientIndex].pAttackInfo;
         g_pAttackData[clientIndex].pAttackInfo = new ATTACKINFO[iSize];
 
-        // ê³µê²© ì •ë³´ ë°›ê¸° - 2. ë²¡í„°
+        // °ø°İ Á¤º¸ ¹Ş±â - 2. º¤ÅÍ
         retval = recvn(sock, (char*)g_pAttackData[clientIndex].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
         if (retval == SOCKET_ERROR)
         {
@@ -466,25 +536,25 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
         }
         else if (retval == 0)
             return FALSE;
-        for (int i = 0; i < iSize; ++i)
-        {
-            printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
-        }
+
+        //for (int i = 0; i < iSize; ++i)
+        //{
+        //    printf("vec.front(): %d\n", g_pAttackData[clientIndex].pAttackInfo[i].iType);
+        //}
     }
 
-
-
     ////////////////////////////////////////////////////////////////////
-    //ì¶©ëŒì²´í¬
+    //Ãæµ¹Ã¼Å©
     CheckCollision(clientIndex);
     ////////////////////////////////////////////////////////////////////
+
 
     for (int i = 0; i < 4; i++)
     {
         //if (i == clientIndex)
         //    continue;
 
-        // ê³µê²© ì •ë³´ ë³´ë‚´ê¸° - 1. ë°°ì—´ì˜ í¬ê¸°
+        // °ø°İ Á¤º¸ º¸³»±â - 1. ¹è¿­ÀÇ Å©±â
         retval = send(sock, (char*)&g_pAttackData[i].iSize, sizeof(int), 0);
         if (retval == SOCKET_ERROR)
         {
@@ -496,7 +566,7 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
         if (iSize == 0)
             continue;
 
-        // ê³µê²© ì •ë³´ ë³´ë‚´ê¸° - 2. ë°°ì—´
+        // °ø°İ Á¤º¸ º¸³»±â - 2. ¹è¿­
         retval = send(sock, (char*)g_pAttackData[i].pAttackInfo, iSize * sizeof(ATTACKINFO), 0);
         if (retval == SOCKET_ERROR)
         {
@@ -509,6 +579,67 @@ bool SendRecv_AttackInfo(SOCKET sock, int clientIndex)
 
 }
 
+bool SendPlayerInit(SOCKET sock, int PlayerIndex)
+{
+    int retval;
+
+    g_PlayerInit.iCount = (int)fStartTime;
+    PLAYER_INIT_SEND tPlayerInitSend;
+    tPlayerInitSend.start = g_PlayerInit.start;
+    tPlayerInitSend.idx = PlayerIndex;
+    tPlayerInitSend.iCount = g_PlayerInit.iCount;
+
+    if (g_PlayerInit.start)
+    {
+        Get_InitPos(PlayerIndex, tPlayerInitSend);
+    }
+    retval = send(sock, (char*)&tPlayerInitSend, sizeof(PLAYER_INIT_SEND), 0);
+    if (retval == SOCKET_ERROR)
+    {
+        err_display("send()");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void CountStart()
+{
+    fStartTime += m_GameTimer.GetTimeElapsed();  // ÀÌÀü ÇÁ·¹ÀÓ¿¡¼­ ÇöÀç ÇÁ·¹ÀÓ±îÁö ½Ã°£ 
+    //std::cout << 6 - (int)fStartTime << std::endl;
+    if (fStartTime >= START_TIME)
+    {
+        g_PlayerInit.start = true;
+    }
+}
+
+void Get_InitPos(int idx, PLAYER_INIT_SEND& tPlayerInitSend)
+{
+    switch (idx)
+    {
+    case 0:
+        tPlayerInitSend.tPos = { 300.f, 300.f };
+        break;
+    case 1:
+        tPlayerInitSend.tPos = { 900.f, 300.f };
+        break;
+    case 2:
+        tPlayerInitSend.tPos = { 300.f, 600.f };
+        break;
+    case 3:
+        tPlayerInitSend.tPos = { 900.f, 600.f };
+        break;
+    default:
+        break;
+    }
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (i % 2)
+            tPlayerInitSend.team[i] = TEAMNUM::TEAM1;
+        else
+            tPlayerInitSend.team[i] = TEAMNUM::TEAM2;
+    }
+}
 
 void CheckCollision(int iIndex)
 {
@@ -518,40 +649,26 @@ void CheckCollision(int iIndex)
 
     for (int i = 0; i < 4/*g_iClientCount*/; ++i)
     {
+        //ÀÚ±â ÀÚ½Å °Ë»çx
         if (iCurIndex == i)
             continue;
 
-        //ì£½ì—ˆìœ¼ë©´ ì¶©ëŒx
+        //Á×¾úÀ¸¸é Ãæµ¹x
         if (g_tStoreData.tPlayersInfo[i].isDead)
             continue;
 
-        for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //ë³¸ì¸ì˜ ìŠ¤í‚¬ ê°¯ìˆ˜
+        //°°ÀºÆÀÀÌ¸é Ãæµ¹x
+        if (g_tStoreData.team[iCurIndex] == g_tStoreData.team[i])
+            continue;
+
+        for (int j = 0; j < g_pAttackData[iCurIndex].iSize; ++j) //º»ÀÎÀÇ ½ºÅ³ °¹¼ö
         {
             if (Check_Sphere_SkillPlayer(g_pAttackData[iCurIndex].pAttackInfo[j].tInfo, g_tStoreData.tPlayersInfo[i].tPos))
             {
-                //std::cout << i << "í´ë¼ ì¶©ëŒ\n";
                 g_pAttackData[iCurIndex].pAttackInfo[j].bCollision = true;
                 g_isHit[i] = true;
             }
         }
-
-        //if (Check_Rect(g_tStoreData.tPlayersPos[iCurIndex], g_tStoreData.tPlayersPos[i], &x, &y))
-        //{
-        //    if (x > y)
-        //    {
-        //        if (g_tStoreData.tPlayersPos[iCurIndex].fY < g_tStoreData.tPlayersPos[i].fY)
-        //            g_tStoreData.tPlayersPos[iCurIndex].fY -= y;
-        //        else
-        //            g_tStoreData.tPlayersPos[iCurIndex].fY += y;
-        //    }
-        //    else
-        //    {
-        //        if (g_tStoreData.tPlayersPos[iCurIndex].fX < g_tStoreData.tPlayersPos[i].fX)
-        //            g_tStoreData.tPlayersPos[iCurIndex].fX -= x;
-        //        else
-        //            g_tStoreData.tPlayersPos[iCurIndex].fX += x;
-        //    }
-        //}
     }
 }
 
@@ -597,7 +714,7 @@ bool Check_Rect(INFO& tMePos, INFO& tYouPos, float* _x, float* _y)
     //float fCX = (float)((_Dst->Get_Info().iCX + _Src->Get_Info().iCX) >> 1);
     //float fCY = (float)((_Dst->Get_Info().iCY + _Src->Get_Info().iCY) >> 1);
 
-    //í”Œë ˆì´ì–´ 30,80
+    //ÇÃ·¹ÀÌ¾î 30,80
     float fCX = 30.f;
     float fCY = 80.f;
 

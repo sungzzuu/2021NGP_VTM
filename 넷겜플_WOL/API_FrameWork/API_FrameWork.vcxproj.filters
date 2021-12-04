@@ -326,10 +326,7 @@
     <ClCompile Include="DataMgr.cpp">
       <Filter>소스 파일\98.Manager\08.DataMgr</Filter>
     </ClCompile>
-    <ClCompile Include="API_FrameWork_CGH.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="API_FrameWork_AHN.cpp">
+    <ClCompile Include="AHN_FrameWork.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

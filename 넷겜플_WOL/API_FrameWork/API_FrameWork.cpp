@@ -9,7 +9,6 @@
 #include "ObjMgr.h"
 #include "MyButton.h"
 #include "DataMgr.h"
-#include <iostream>
 
 #define MAX_LOADSTRING 100
 
@@ -34,8 +33,7 @@ bool SendRecvPlayerInfo(SOCKET sock);
 
 bool SendRecvHpPotionInfo(SOCKET sock);
 bool SendRecvAttacks(SOCKET sock);
-
-DWORD WINAPI Start(LPVOID arg);
+bool RecvPlayerInit(SOCKET sock);
 
 // 서버 관련 변수
 HANDLE hServerProcess;
@@ -48,6 +46,10 @@ char SERVERIP[512] =  /*"192.168.122.249"*/"127.0.0.1";
 
 // 체력약 관련 변수, 함수
 POTIONRES g_tHpPotionRes;
+
+// 게임시작 관련
+PLAYER_INIT_SEND g_tPlayerInit;
+
 void Add_Potion(HpPotionCreate);
 void Delete_Potion(HpPotionDelete hpPotionDelete);
 
@@ -275,7 +277,10 @@ DWORD WINAPI ServerProcess(LPVOID arg)
         // 이곳에 각각의 함수 추가! 주고 받는 것
         //////////////////////////////////////////////////////////
 
-      
+		retval = RecvPlayerInit(sock);
+		if (retval == FALSE)
+			break;
+
         retval = SendRecvPlayerInfo(sock);
         if (retval == FALSE)
             break;
@@ -490,3 +495,25 @@ void Delete_Potion(HpPotionDelete hpPotionDelete)
 	CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
 }
 
+bool RecvPlayerInit(SOCKET sock)
+{
+	int retval;
+
+	retval = recvn(sock, (char*)&g_tPlayerInit, sizeof(PLAYER_INIT_SEND), 0);
+	if (retval == SOCKET_ERROR)
+	{
+		err_display("recv()");
+		return FALSE;
+	}
+	else if (retval == 0)
+		return FALSE;
+
+	//buf[retval] = '\0';
+	//printf("(%f, %f)\n", g_tPlayerInit.tPos.fX, g_tPlayerInit.tPos.fY);
+	//std::cout<< CDataMgr::Get_Instance()->m_tStoreData.team[1] << std::endl;
+	for (int i = 0; i < 4; ++i)
+	{
+		std::cout << g_tPlayerInit.team[i] << std::endl;
+	}
+
+}
