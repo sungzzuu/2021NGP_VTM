@@ -99,7 +99,7 @@ void CPlayer::Initialize()
 
 	m_bFireLeft = false;
 
-	m_iHp = 100;
+	m_iHp = 150;
 	m_iMaxHp = 150;
 	m_iMana = 0;
 	m_iGold = 0;
@@ -347,7 +347,7 @@ void CPlayer::Key_Check()
 		Normal_Att();
 		Fire_Att();
 		Ice_Att();
-		Shield_Att();
+		//Shield_Att();
 		Blast_Att();
 	}
 
