@@ -60,10 +60,10 @@ int CSkillBar::Update()
 	{
 		m_bE_Draw = true;
 	}
-	if (true == m_bR_Draw || true == static_cast<CPlayer*>(m_pTarget)->Get_R())
-	{
-		m_bR_Draw = true;
-	}
+	//if (true == m_bR_Draw || true == static_cast<CPlayer*>(m_pTarget)->Get_R())
+	//{
+	//	m_bR_Draw = true;
+	//}
 
 	return OBJ_NOEVENT;
 }
@@ -91,21 +91,21 @@ void CSkillBar::Render(HDC _DC)
 
 
 	////////////////////////////∞ÒµÂ
-	hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_MONEY");
-	GdiTransparentBlt(_DC, m_tRect.left + iScrollX + 400, m_tRect.top + iScrollY + 30,
-		25, 25,
-		hMemDC,
-		0, 0,
-		31, 31,
-		RGB(255, 0, 255));
+	//hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"UI_MONEY");
+	//GdiTransparentBlt(_DC, m_tRect.left + iScrollX + 400, m_tRect.top + iScrollY + 30,
+	//	25, 25,
+	//	hMemDC,
+	//	0, 0,
+	//	31, 31,
+	//	RGB(255, 0, 255));
 
 	//HFONT myFont     = CreateFont(25, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, L"Arial");
 	//HFONT oldFont    = (HFONT)SelectObject(_DC, myFont);
 	TCHAR szBuff[32] = L"";
-	swprintf_s(szBuff, L" %d", m_pTarget->Get_Gold());
+	//swprintf_s(szBuff, L" %d", m_pTarget->Get_Gold());
 	SetBkMode(_DC, 1); //≈ı∏Ì
 	SetTextColor(_DC, RGB(255,255,0));
-	TextOut(_DC, m_tRect.left + iScrollX + 430, m_tRect.top + iScrollY + 35, szBuff, lstrlen(szBuff));
+	//TextOut(_DC, m_tRect.left + iScrollX + 430, m_tRect.top + iScrollY + 35, szBuff, lstrlen(szBuff));
 
 	if (true == static_cast<CPlayer*>(m_pTarget)->Get_Right())
 	{
