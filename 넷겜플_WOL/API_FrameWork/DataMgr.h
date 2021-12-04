@@ -28,7 +28,6 @@ public:
 	void SetAttackArr();	// 리스트 갱신
 	void RenderOthersAttack(HDC _DC);
 	TCHAR* GetFrameKey_Attack(int iType, POINT& pt, POINT& imSize, UINT& tpColor);
-
 private:
 	static CDataMgr* m_pInstance;
 

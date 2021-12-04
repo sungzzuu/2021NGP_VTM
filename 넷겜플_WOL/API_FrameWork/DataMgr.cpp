@@ -163,4 +163,3 @@ TCHAR* CDataMgr::GetFrameKey_Attack(int iType, POINT& pt, POINT& imSize, UINT& t
 		break;
 	}
 }
-

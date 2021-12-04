@@ -178,7 +178,6 @@ void CUI::Render(HDC _DC)
 		192, 16,
 		RGB(255, 0, 255));
 
-
 	if (g_tPlayerInit.iCount == 5)
 	{
 		BeginPaint(g_hWnd, &ps);

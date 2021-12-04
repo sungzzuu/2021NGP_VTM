@@ -43,6 +43,11 @@ void CPlayer::Initialize()
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/Ice_ATTACK.bmp", L"Ice_ATTACK");
 	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/Player/ICE_BLAST.bmp", L"ICE_BLAST");
 
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/ReviveTime.bmp", L"ReviveTime");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/GameStartTime.bmp", L"GameStartTime");
+
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/win.bmp", L"WIN");
+	CBmpMgr::Get_Instance()->Insert_Bmp(L"../Image/lose.bmp", L"LOSE");
 
 	/// </summary>
 	m_eCurState = IDLE;
@@ -113,6 +118,8 @@ void CPlayer::Initialize()
 	m_iBlast_Idx = 0;
 
 	m_iRight_Remain = 8; 
+
+	m_dDead_Time = 0.f;
 }
 
 int CPlayer::Update()
@@ -135,6 +142,7 @@ int CPlayer::Update()
 	//CDataMgr::Get_Instance()->m_tPlayerInfo.tFrame = m_tFrame;
 
 	CheckHit();
+	CheckRevie();
 	/// ////////////////////////////////////////////////
 
 	if (g_tPlayerInit.start && !m_bStart)
@@ -229,37 +237,96 @@ void CPlayer::Render(HDC _DC)
 				, RGB(255, 0, 255));
 		}
 	}
+	int iClientIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
+	if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iClientIndex].eEnding == ENDING::WIN)
+	{
+		hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"WIN");
 
+		GdiTransparentBlt(_DC
+			, 0, 0
+			, WINCX, WINCY
+			, hMemDC
+			, 0, 0
+			, WINCX, WINCY
+			, RGB(255, 255, 255));
 
+		return; // 부활UI 출력 안하도록
+	}
+	else if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iClientIndex].eEnding == ENDING::LOSE)
+	{
+		hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"LOSE");
+
+		GdiTransparentBlt(_DC
+			, 0, 0
+			, WINCX, WINCY
+			, hMemDC
+			, 0, 0
+			, WINCX, WINCY
+			, RGB(255, 255, 255));
+
+		return; // 부활UI 출력 안하도록
+	}
+
+	if (CDataMgr::Get_Instance()->m_tPlayerInfo.isDead)
+	{
+		int leftTime = (m_dwDaedTime + REVIVE_TIME - GetTickCount())/1000;
+		hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(L"ReviveTime");
+
+		GdiTransparentBlt(_DC
+			, WINCX/2 - 200, WINCY / 2 - 300
+			, 400, 600
+			, hMemDC
+			, leftTime * 200, 0
+			, 200, 300
+			, RGB(255, 255, 255));
+	}
 }
 
 
 
 void CPlayer::CheckHit()
 {
-	if (CDataMgr::Get_Instance()->m_tPlayerInfo.isDead)
+	CDataMgr* dataMgr = CDataMgr::Get_Instance();
+
+	if (dataMgr->m_tPlayerInfo.isDead)
 		return;
 
-	int iIndex = CDataMgr::Get_Instance()->m_tStoreData.iClientIndex;
-	if (CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
+	int iIndex = dataMgr->m_tStoreData.iClientIndex;
+	if (dataMgr->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
 	{
 		m_iHp -= 5; //임의로
 		if (m_iHp < 0)
 		{
 			m_iHp = 0;
-			//CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isDead = true;
-			CDataMgr::Get_Instance()->m_tPlayerInfo.isDead = true;
-
+			dataMgr->m_tPlayerInfo.isDead = true;
 			m_eCurState = DEAD;
+			m_dwDaedTime = GetTickCount();
 			m_pFrameKey = L"Player_DOWN";
 		}
-		CDataMgr::Get_Instance()->m_tStoreData.tPlayersInfo[iIndex].isHit = false;
+		dataMgr->m_tStoreData.tPlayersInfo[iIndex].isHit = false;
 
 		std::cout << iIndex << "번째 hp: " << m_iHp << std::endl;
 	}
 }
 
+void CPlayer::CheckRevie()
+{
+	CDataMgr* dataMgr = CDataMgr::Get_Instance();
+	int iIndex = dataMgr->m_tStoreData.iClientIndex;
+	if (dataMgr->m_tStoreData.tPlayersInfo[iIndex].eEnding == ENDING::WIN ||
+		dataMgr->m_tStoreData.tPlayersInfo[iIndex].eEnding == ENDING::LOSE)
+		return;
 
+	if (m_eCurState == DEAD)
+	{
+		if (m_dwDaedTime + REVIVE_TIME < GetTickCount())
+		{
+			dataMgr->m_tPlayerInfo.isDead = false;
+			m_iHp = m_iMaxHp;
+			m_eCurState = IDLE;
+		}
+	}
+}
 
 void CPlayer::Release()
 {

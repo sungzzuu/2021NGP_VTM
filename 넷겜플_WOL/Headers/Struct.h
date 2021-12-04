@@ -47,9 +47,9 @@ typedef struct tagFrame
 /// ///////////////////////////////////////////
 typedef struct tagFrameInfo
 {
-	int		iFrameStart; // ��
-	int		iFrameScene; // ��
-	int		iFrameKey;// ������Ű (PLAYER_DOWN)			
+	int		iFrameStart; // 
+	int		iFrameScene; // 
+	int		iFrameKey;//  (PLAYER_DOWN)			
 
 }FRAME_INFO;
 
@@ -83,8 +83,10 @@ typedef struct tagPlayerInfo
 	bool start;
 	bool button;
 
-	bool	isHit = false; //충돌 판정
-	bool	isDead = false; //죽었다 살아나면 false로 변환 필요 / True일때 충돌x
+	bool				isHit = false; //충돌 판정
+	bool				isDead = false; //죽었다 살아나면 false로 변환 필요 / True일때 충돌x
+	ENDING::END_TYPE	eEnding = ENDING::ING;
+
 	//FRAME tFrame;
 
 }PLAYER_INFO;
@@ -106,19 +108,19 @@ typedef struct tagStoreData
 	bool start;
 }STORE_DATA;
 
-//////////////////////////////////// ����
+//////////////////////////////////// 
 struct HpPotionCreate
 {
-	int		cnt; // ��� Ŭ�� ���´���
-	int		index; // ü�¾� ����Ʈ �� ���°?
+	int		cnt; // 
+	int		index; // 
 	bool	bCreateOn;
 	POS		pos;
 };
 
 struct HpPotionDelete
 {
-	int		cnt; // ��� Ŭ�� ���´���
-	int		index; // ü�¾� ����Ʈ �� ���°?
+	int		cnt; // 
+	int		index; // 
 	bool	bDeleteOn;
 };
 
@@ -137,10 +139,10 @@ typedef struct tagHpPotionRes
 
 typedef struct tagAttackInfo
 {
-	size_t			iType = 0;			// 4���� ���� �߿��� ����
-	INFO			tInfo;			// ��ǥ�� ���μ��� ũ��
-	int				iFrameScene = 0;	// ��
-	int				iFrameStart = 0;	// ��
+	size_t			iType = 0;			 
+	INFO			tInfo;			 
+	int				iFrameScene = 0;	 
+	int				iFrameStart = 0;	 
 	bool			bCollision = 0;
 
 }ATTACKINFO;

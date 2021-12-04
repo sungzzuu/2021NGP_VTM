@@ -326,6 +326,8 @@ bool SendRecvPlayerInfo(SOCKET sock)
     else if (retval == 0)
         return FALSE;
 
+	// 여기서 엔딩 확인
+
 
     //충돌된 좌표로 갱신
     //Player Render 에서
@@ -487,3 +489,4 @@ void Delete_Potion(HpPotionDelete hpPotionDelete)
 	// index 일치하는 체력약 찾아서 삭제하기
 	CObjMgr::Get_Instance()->Delete_Potion(hpPotionDelete.index);
 }
+
