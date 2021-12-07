@@ -294,7 +294,7 @@ void CPlayer::CheckHit()
 	int iIndex = dataMgr->m_tStoreData.iClientIndex;
 	if (dataMgr->m_tStoreData.tPlayersInfo[iIndex].isHit) //히트는 서버에서 판정하므로
 	{
-		m_iHp -= 5; //임의로
+		m_iHp -= 8; //임의로
 		if (m_iHp < 0)
 		{
 			m_iHp = 0;
