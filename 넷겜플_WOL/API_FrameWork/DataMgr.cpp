@@ -105,7 +105,8 @@ void CDataMgr::RenderOthersAttack(HDC _DC)
 			POINT imageSize;
 			UINT transparentColor;
 
-			TCHAR* pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size, imageSize, transparentColor);
+			TCHAR* pFrameKey = nullptr;
+			pFrameKey = GetFrameKey_Attack(m_pOthersAttackData[i].pAttackInfo[j].iType, size, imageSize, transparentColor);
 			HDC hMemDC = CBmpMgr::Get_Instance()->Find_Bmp(pFrameKey);
 
 			//Ellipse(_DC, m_tRect.left + iScrollX, m_tRect.top + iScrollY, m_tRect.right + iScrollX, m_tRect.bottom + iScrollY);

@@ -41,7 +41,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] =  /*"192.168.122.249"*/"127.0.0.1";
+char SERVERIP[512] =  /*"192.168.122.249"*/"192.168.122.247";
 
 
 // 체력약 관련 변수, 함수
@@ -99,7 +99,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 
-		if (dwTime1 + 10  < GetTickCount())
+		if (dwTime1 + 20  < GetTickCount())
 		{
 			WaitForSingleObject(hGameEvent, INFINITE);
 

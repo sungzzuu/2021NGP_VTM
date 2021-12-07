@@ -377,14 +377,14 @@ void CheckEnding(int iCurIndex)
 
     if (g_tStoreData.tPlayersInfo[iCurIndex].isDead)
     {
-        TEAMNUM::TEAM eNowTeam = g_tStoreData.tPlayersInfo[iCurIndex].team;
+        TEAMNUM::TEAM eNowTeam = g_tStoreData.team[iCurIndex];
 
         for (int i = 0; i < 4; i++)
         {
             if (i == iCurIndex)
                 continue;
 
-            if (g_tStoreData.tPlayersInfo[i].team == eNowTeam && g_tStoreData.tPlayersInfo[i].isDead)
+            if (g_tStoreData.team[i] == eNowTeam && g_tStoreData.tPlayersInfo[i].isDead)
             {
                 g_bEnding = true;
                 g_tStoreData.tPlayersInfo[iCurIndex].eEnding = ENDING::LOSE;
@@ -635,9 +635,9 @@ void Get_InitPos(int idx, PLAYER_INIT_SEND& tPlayerInitSend)
     for (int i = 0; i < 4; ++i)
     {
         if (i % 2)
-            tPlayerInitSend.team[i] = TEAMNUM::TEAM1;
-        else
             tPlayerInitSend.team[i] = TEAMNUM::TEAM2;
+        else
+            tPlayerInitSend.team[i] = TEAMNUM::TEAM1;
     }
 }
 
