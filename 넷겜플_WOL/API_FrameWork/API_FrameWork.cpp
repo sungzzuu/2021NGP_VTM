@@ -41,7 +41,7 @@ HANDLE hServerProcess;
 HANDLE hGameEvent;
 HANDLE hSocketEvent;
 
-char SERVERIP[512] =  /*"192.168.122.249"*/"192.168.42.149";
+char SERVERIP[512] =  /*"192.168.122.249"*/"127.0.0.1";
 
 
 // 체력약 관련 변수, 함수
